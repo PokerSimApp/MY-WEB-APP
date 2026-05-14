@@ -45,6 +45,34 @@
   .focus-btn:hover { border-color:#7ecef4; color:#fff; }
   .focus-btn.active { background:#0d5a2a; border-color:#2ecc71; color:#2ecc71; }
 
+  /* ── Bass Clef Staff ── */
+  .staff-section {
+    background: #16213e;
+    border: 1px solid #2a4a7f;
+    border-radius: 10px;
+    padding: 10px 16px 4px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .staff-header {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .staff-header .staff-lbl {
+    font-size: 0.72em; font-weight: bold; color: #7ecef4;
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .staff-header .staff-note-name {
+    font-size: 1.3em; font-weight: bold; color: #fff;
+  }
+  #staff-svg { display: block; max-width: 300px; width: 100%; }
+
   .status { text-align:center; font-size:0.88em; color:#7ecef4;
             margin-bottom:12px; min-height:20px; font-style:italic; }
 
@@ -82,70 +110,31 @@
 
   /* ── Scale Pattern Section ── */
   .pattern-section {
-    margin-top: 22px;
-    background: #16213e;
-    border: 1px solid #2a4a7f;
-    border-radius: 12px;
-    padding: 16px 20px;
+    margin-top: 22px; background: #16213e;
+    border: 1px solid #2a4a7f; border-radius: 12px; padding: 16px 20px;
   }
   .pattern-section h2 {
-    font-size: 0.78em;
-    font-weight: bold;
-    color: #7ecef4;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 14px;
+    font-size: 0.78em; font-weight: bold; color: #7ecef4;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
   }
-  .pattern-empty {
-    color: #666;
-    font-style: italic;
-    font-size: 0.88em;
-    text-align: center;
-    padding: 10px 0;
-  }
+  .pattern-empty { color: #666; font-style: italic; font-size: 0.88em;
+    text-align: center; padding: 10px 0; }
   .pattern-strings { display: flex; flex-direction: column; gap: 14px; }
-
-  .pattern-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .pattern-row { display: flex; align-items: flex-start; gap: 12px; }
   .pattern-str-label {
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #7ecef4;
-    background: #0d2040;
-    border-radius: 6px;
-    padding: 4px 10px;
-    min-width: 42px;
-    text-align: center;
-    margin-top: 4px;
+    font-size: 0.9em; font-weight: bold; color: #7ecef4;
+    background: #0d2040; border-radius: 6px; padding: 4px 10px;
+    min-width: 42px; text-align: center; margin-top: 4px;
   }
-  .pattern-cells {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .pattern-cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
+  .pattern-cells { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pattern-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .pattern-note-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    font-size: 0.8em;
-    font-weight: bold;
-    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%;
+    font-size: 0.8em; font-weight: bold; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    cursor: pointer;
-    transition: transform 0.12s, box-shadow 0.12s;
+    cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
   }
   .pattern-note-badge:hover {
     transform: scale(1.12);
@@ -161,24 +150,18 @@
   }
   .pattern-note-badge.playing { animation: badgePulse 0.4s ease-out; }
 
+  @keyframes crossPulse {
+    0%   { transform:scale(1);   box-shadow:0 0 0 0   rgba(255,255,200,1);  filter:brightness(1); }
+    40%  { transform:scale(1.5); box-shadow:0 0 0 18px rgba(255,255,200,0); filter:brightness(2.2); }
+    100% { transform:scale(1);   box-shadow:0 0 0 0   rgba(255,255,200,0);  filter:brightness(1); }
+  }
+
   .pattern-pos-label {
-    font-size: 0.75em;
-    font-weight: bold;
-    color: #aac;
-    letter-spacing: 0.5px;
-    min-width: 38px;
-    text-align: center;
+    font-size: 0.75em; font-weight: bold; color: #aac;
+    letter-spacing: 0.5px; min-width: 38px; text-align: center;
   }
+  .pattern-arrow { font-size: 0.9em; color: #4a6a9f; margin-top: 10px; align-self: center; }
 
-  /* Arrow between notes */
-  .pattern-arrow {
-    font-size: 0.9em;
-    color: #4a6a9f;
-    margin-top: 10px;
-    align-self: center;
-  }
-
-  /* Legend */
   .legend { margin-top:18px; display:flex; flex-wrap:wrap; gap:7px; justify-content:center; }
   .legend-item { display:flex; align-items:center; gap:5px; font-size:0.78em; color:#ccc; }
   .legend-dot  { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
@@ -187,7 +170,7 @@
 
   @media print {
     body { background:white; color:black; padding:8px; }
-    .controls,.audio-bar,.status,footer { display:none; }
+    .controls,.audio-bar,.status,.staff-section,footer { display:none; }
     .fretboard { min-width:unset; }
   }
 </style>
@@ -220,13 +203,21 @@
   </div>
 </div>
 
+<!-- Bass Clef Staff -->
+<div class="staff-section">
+  <div class="staff-header">
+    <span class="staff-lbl">🎵 Bass Clef Staff</span>
+    <span class="staff-note-name" id="staff-note-name">—</span>
+  </div>
+  <svg id="staff-svg" viewBox="0 0 300 260" width="300" height="260"></svg>
+</div>
+
 <div class="status" id="status">Showing all 12 chromatic notes</div>
 
 <div class="fretboard-wrap">
   <table class="fretboard" id="fretboard"></table>
 </div>
 
-<!-- Scale Pattern -->
 <div class="pattern-section">
   <h2 id="pattern-heading">📋 Scale Pattern — open position (frets 0 – 7)</h2>
   <div id="pattern-display"><p class="pattern-empty">Select a scale above to see the fingering pattern</p></div>
@@ -257,7 +248,6 @@ const SCALES = {
   'Harmonic Minor':   [0,2,3,5,7,8,11],
 };
 
-// E→A→D→G (low to high): stored low-to-high for pattern, reversed for tab display
 const STRINGS = [
   { name:'G', openIdx:7,  openMidi:43 },
   { name:'D', openIdx:2,  openMidi:38 },
@@ -266,7 +256,7 @@ const STRINGS = [
 ];
 
 const NUM_FRETS   = 24;
-const PATTERN_MAX = 7;   // show frets 0-7 in pattern
+const PATTERN_MAX = 7;
 const SINGLE_DOTS = new Set([3,5,7,9,15,17,19,21]);
 const DOUBLE_DOTS = new Set([12,24]);
 
@@ -330,6 +320,136 @@ function playBassNote(midi, noteName, stringName, fret) {
 
   const display = document.getElementById('now-playing');
   display.innerHTML = `🔊 <span>${noteName}</span> &nbsp;·&nbsp; ${stringName} string fret ${fret} &nbsp;·&nbsp; ${hz.toFixed(1)} Hz`;
+  drawStaff(midi, noteName);
+}
+
+// ── Bass Clef Staff ──────────────────────────────────────────────────────────
+const SVG_NS    = 'http://www.w3.org/2000/svg';
+const STEP_H    = 8;    // px per staff step (half-space)
+const STAFF_X   = 60;   // left edge of staff lines
+const STAFF_W   = 210;  // width of staff lines
+const NOTE_X    = 210;  // x of note head
+const STAFF_BOT = 185;  // y of bottom staff line (G2, pos=0)
+
+function midiToStaffInfo(midi) {
+  const ni  = ((midi % 12) + 12) % 12;
+  const oct = Math.floor(midi / 12) - 1;
+  const diaMap = [0,0,1,1,2,3,3,4,4,5,5,6];
+  const accMap = [null,'♯',null,'♯',null,null,'♯',null,'♯',null,'♯',null];
+  const stepsFromC0 = diaMap[ni] + oct * 7;
+  return { pos: stepsFromC0 - 18, acc: accMap[ni] }; // G2=18 steps from C0
+}
+
+function mkEl(tag, attrs, text) {
+  const el = document.createElementNS(SVG_NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, String(v)));
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+
+function drawStaff(midi, noteName) {
+  const svg = document.getElementById('staff-svg');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // Dark background
+  svg.appendChild(mkEl('rect', { x:0, y:0, width:300, height:260, fill:'#0d1830', rx:6 }));
+
+  // ── 5 staff lines ──
+  for (let i = 0; i < 5; i++) {
+    const y = STAFF_BOT - i * 2 * STEP_H;
+    svg.appendChild(mkEl('line', {
+      x1: STAFF_X, x2: STAFF_X + STAFF_W, y1: y, y2: y,
+      stroke: '#7a9abf', 'stroke-width': 1.3
+    }));
+  }
+
+  // ── Bass clef image ──
+  const clefImg = mkEl('image', {
+    x: '4',
+    y: String(STAFF_BOT - 9 * STEP_H - 4),
+    width: '52',
+    height: '84',
+    href: 'base-bass-clef.png',
+    preserveAspectRatio: 'xMidYMid meet'
+  });
+  clefImg.style.filter = 'invert(1) opacity(0.9)';
+  svg.appendChild(clefImg);
+
+  // ── No note yet ──
+  if (midi == null) {
+    svg.appendChild(mkEl('text', {
+      x: NOTE_X, y: STAFF_BOT - 3 * STEP_H,
+      'text-anchor': 'middle', 'font-size': 11,
+      fill: '#334466', 'font-family': 'Arial, sans-serif'
+    }, '▶ click a note'));
+    return;
+  }
+
+  const { pos, acc } = midiToStaffInfo(midi);
+  const noteY     = STAFF_BOT - pos * STEP_H;
+  const noteColor = NOTE_COLORS[noteName] || '#ffffff';
+
+  // ── Ledger lines ──
+  const ledgerW = STEP_H * 2.2;
+  const ledgerLine = (ly) => mkEl('line', {
+    x1: NOTE_X - ledgerW, x2: NOTE_X + ledgerW,
+    y1: ly, y2: ly, stroke: '#7a9abf', 'stroke-width': 1.3
+  });
+  if (pos < 0) {
+    const lowPos = pos % 2 === 0 ? pos : pos + 1;
+    for (let lp = -2; lp >= lowPos; lp -= 2)
+      svg.appendChild(ledgerLine(STAFF_BOT - lp * STEP_H));
+  } else if (pos > 8) {
+    const hiPos = pos % 2 === 0 ? pos : pos - 1;
+    for (let lp = 10; lp <= hiPos; lp += 2)
+      svg.appendChild(ledgerLine(STAFF_BOT - lp * STEP_H));
+  }
+
+  // ── Accidental ──
+  if (acc) {
+    svg.appendChild(mkEl('text', {
+      x: NOTE_X - STEP_H * 2.6, y: noteY + STEP_H * 0.4,
+      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'font-size': STEP_H * 2.1, fill: '#ffffff',
+      'font-family': 'serif', 'font-weight': 'bold'
+    }, acc));
+  }
+
+  // ── Glow ──
+  svg.appendChild(mkEl('ellipse', {
+    cx: NOTE_X, cy: noteY,
+    rx: STEP_H * 2.2, ry: STEP_H * 1.6,
+    fill: noteColor, opacity: 0.18
+  }));
+
+  // ── Note head ──
+  svg.appendChild(mkEl('ellipse', {
+    cx: NOTE_X, cy: noteY,
+    rx: STEP_H * 1.0, ry: STEP_H * 0.72,
+    fill: noteColor, stroke: 'rgba(0,0,0,0.6)', 'stroke-width': 1
+  }));
+
+  // ── Stem ──
+  const stemUp = pos < 4;
+  const stemX  = stemUp ? NOTE_X + STEP_H * 0.95 : NOTE_X - STEP_H * 0.95;
+  const stemY2 = stemUp ? noteY - STEP_H * 3.8   : noteY + STEP_H * 3.8;
+  svg.appendChild(mkEl('line', {
+    x1: stemX, x2: stemX, y1: noteY, y2: stemY2,
+    stroke: 'rgba(255,255,255,0.75)', 'stroke-width': 1.8, 'stroke-linecap': 'round'
+  }));
+
+  // ── Note label below staff ──
+  const octave   = Math.floor(midi / 12) - 1;
+  const octLabel = `${noteName}${octave}`;
+  svg.appendChild(mkEl('text', {
+    x: NOTE_X, y: 250,
+    'text-anchor': 'middle', 'font-size': 14,
+    fill: noteColor, 'font-family': 'Arial, sans-serif', 'font-weight': 'bold'
+  }, octLabel));
+
+  const nameEl = document.getElementById('staff-note-name');
+  nameEl.textContent = octLabel;
+  nameEl.style.color = noteColor;
 }
 
 // ── Root note buttons ────────────────────────────────────────────────────────
@@ -377,6 +497,14 @@ document.getElementById('mute-btn').addEventListener('click', function() {
   }
 });
 
+// ── Focus button ─────────────────────────────────────────────────────────────
+document.getElementById('focus-btn').addEventListener('click', function() {
+  focusMode = !focusMode;
+  this.textContent = focusMode ? '🎯 Focus Frets 1–5: On' : '🎯 Focus Frets 1–5: Off';
+  this.classList.toggle('active', focusMode);
+  updateAll();
+});
+
 // ── Build fretboard ──────────────────────────────────────────────────────────
 const table = document.getElementById('fretboard');
 const thead = table.createTHead();
@@ -402,19 +530,24 @@ STRINGS.forEach(str => {
     const midi     = str.openMidi + f;
     const td = row.insertCell();
     td.className = 'note-cell' + (f === 0 ? ' nut' : '');
-    td.dataset.note = noteName;
-    td.dataset.fret = f;
+    td.dataset.note   = noteName;
+    td.dataset.fret   = f;
     td.dataset.string = str.name;
     const circle = document.createElement('span');
     circle.className = 'note-circle';
     circle.style.background = NOTE_COLORS[noteName];
     circle.textContent = noteName;
     td.appendChild(circle);
+    td.addEventListener('mouseenter', () => {
+      if (!circle.classList.contains('dimmed')) highlightInPattern(noteName);
+    });
+    td.addEventListener('mouseleave', clearPatternHighlight);
     td.addEventListener('click', () => {
       circle.classList.remove('playing');
       void circle.offsetWidth;
       circle.classList.add('playing');
       circle.addEventListener('animationend', () => circle.classList.remove('playing'), {once:true});
+      crossPulsePattern(noteName);
       playBassNote(midi, noteName, str.name, f);
     });
   }
@@ -449,37 +582,38 @@ function getScaleNotes(root, scaleName) {
 function updateFretboard() {
   const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
   document.querySelectorAll('.note-circle').forEach(circle => {
-    const note    = circle.closest('td').dataset.note;
-    const inScale = !scaleNotes || scaleNotes.has(note);
-    const isRoot  = note === selectedRoot && selectedScale !== 'All Notes';
-    const fret      = +circle.closest('td').dataset.fret;
-    const strName   = circle.closest('td').dataset.string;
-    const focusLimit = strName === 'G' ? 8 : 4;
-    const outOfFocus = focusMode && fret > focusLimit;
-    const isDimmed   = !inScale || outOfFocus;
+    const td        = circle.closest('td');
+    const note      = td.dataset.note;
+    const fret      = +td.dataset.fret;
+    const strName   = td.dataset.string;
+    const inScale   = !scaleNotes || scaleNotes.has(note);
+    const isRoot    = note === selectedRoot && selectedScale !== 'All Notes';
+    const focusLim  = strName === 'G' ? 8 : 4;
+    const outOfFocus = focusMode && fret > focusLim;
+    const isDimmed  = !inScale || outOfFocus;
 
-    // Drive ALL visual state via inline styles so nothing conflicts with CSS classes
     if (outOfFocus) {
-      circle.style.background  = '#3a3a4a';
-      circle.style.opacity     = '0.18';
-      circle.style.boxShadow   = 'none';
-      circle.style.color       = 'transparent';
+      circle.style.background = '#3a3a4a';
+      circle.style.opacity    = '0.18';
+      circle.style.boxShadow  = 'none';
+      circle.style.color      = 'transparent';
     } else if (!inScale) {
-      circle.style.background  = '#666';
-      circle.style.opacity     = '0.35';
-      circle.style.boxShadow   = 'none';
-      circle.style.color       = '#555';
+      circle.style.background = '#666';
+      circle.style.opacity    = '0.35';
+      circle.style.boxShadow  = 'none';
+      circle.style.color      = '#555';
     } else {
-      circle.style.background  = NOTE_COLORS[note];
-      circle.style.opacity     = '1';
-      circle.style.color       = '#fff';
-      circle.style.boxShadow   = inScale && isRoot
+      circle.style.background = NOTE_COLORS[note];
+      circle.style.opacity    = '1';
+      circle.style.color      = '#fff';
+      circle.style.boxShadow  = isRoot
         ? '0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.35)'
         : '0 2px 4px rgba(0,0,0,0.3)';
     }
     circle.classList.toggle('dimmed',  isDimmed);
     circle.classList.toggle('is-root', inScale && isRoot && !outOfFocus);
   });
+
   const statusEl = document.getElementById('status');
   if (selectedScale === 'All Notes') {
     statusEl.textContent = 'Showing all 12 chromatic notes';
@@ -492,42 +626,38 @@ function updateFretboard() {
 
 // ── Pattern display ──────────────────────────────────────────────────────────
 function updatePattern() {
-  const patEl = document.getElementById('pattern-display');
+  const patEl      = document.getElementById('pattern-display');
   const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
 
   if (!scaleNotes) {
     patEl.innerHTML = '<p class="pattern-empty">Select a scale above to see the fingering pattern</p>';
+    document.getElementById('pattern-heading').textContent =
+      '📋 Scale Pattern — open position (frets 0 – 7)';
     return;
   }
 
-  // Strings displayed low→high: E, A, D, G (reverse of STRINGS array)
-  const stringsLowHigh = STRINGS; // G→D→A→E mirrors fretboard
-
-  // Update heading to reflect current range
   const maxFret = focusMode ? 4 : PATTERN_MAX;
-  document.getElementById('pattern-heading').textContent =
-    focusMode
-      ? '📋 Scale Pattern — focus position (frets 1–5, G string to fret 8)'
-      : '📋 Scale Pattern — open position (frets 0 – 7)';
+  document.getElementById('pattern-heading').textContent = focusMode
+    ? '📋 Scale Pattern — focus position (frets 1–5, G string to fret 8)'
+    : '📋 Scale Pattern — open position (frets 0 – 7)';
 
   let rowsHtml = '';
-  stringsLowHigh.forEach(str => {
-    // Collect scale notes on this string up to maxFret
-    const strMaxFret = (focusMode && str.name === 'G') ? 8 : maxFret;
-    const cells = [];
-    for (let f = 0; f <= strMaxFret; f++) {
+  STRINGS.forEach(str => {
+    const strMax = (focusMode && str.name === 'G') ? 8 : maxFret;
+    const cells  = [];
+    for (let f = 0; f <= strMax; f++) {
       const noteName = CHROMATIC[(str.openIdx + f) % 12];
       if (scaleNotes.has(noteName)) {
-        const midi = str.openMidi + f;
-        const pos  = f + 1;           // 1-indexed: open = 1
-        const posLabel = `${str.name}${pos}`;
-        const isRoot = noteName === selectedRoot;
-        cells.push({ noteName, fret: f, midi, pos, posLabel, isRoot });
+        cells.push({
+          noteName, fret: f,
+          midi:     str.openMidi + f,
+          posLabel: `${str.name}${f + 1}`,
+          isRoot:   noteName === selectedRoot
+        });
       }
     }
-    if (cells.length === 0) return;
+    if (!cells.length) return;
 
-    // Build cell HTML with arrows between
     let cellsHtml = '';
     cells.forEach((c, i) => {
       const rootCls = c.isRoot ? ' root-badge' : '';
@@ -535,18 +665,12 @@ function updatePattern() {
         <div class="pattern-cell">
           <div class="pattern-note-badge${rootCls}"
                style="background:${NOTE_COLORS[c.noteName]}"
-               data-midi="${c.midi}"
-               data-note="${c.noteName}"
-               data-string="${str.name}"
-               data-fret="${c.fret}"
-               onclick="patternPlay(this)">
-            ${c.noteName}
-          </div>
+               data-midi="${c.midi}" data-note="${c.noteName}"
+               data-string="${str.name}" data-fret="${c.fret}"
+               onclick="patternPlay(this)">${c.noteName}</div>
           <div class="pattern-pos-label">${c.posLabel}</div>
         </div>`;
-      if (i < cells.length - 1) {
-        cellsHtml += `<div class="pattern-arrow">→</div>`;
-      }
+      if (i < cells.length - 1) cellsHtml += '<div class="pattern-arrow">→</div>';
     });
 
     rowsHtml += `
@@ -559,27 +683,66 @@ function updatePattern() {
   patEl.innerHTML = `<div class="pattern-strings">${rowsHtml}</div>`;
 }
 
-// ── Play a note from the pattern section ─────────────────────────────────────
+// ── Pattern play (global — called from inline onclick) ───────────────────────
 function patternPlay(el) {
-  const midi   = +el.dataset.midi;
-  const note   = el.dataset.note;
-  const str    = el.dataset.string;
-  const fret   = +el.dataset.fret;
+  const midi = +el.dataset.midi;
+  const note = el.dataset.note;
+  const str  = el.dataset.string;
+  const fret = +el.dataset.fret;
   el.classList.remove('playing');
   void el.offsetWidth;
   el.classList.add('playing');
   el.addEventListener('animationend', () => el.classList.remove('playing'), {once:true});
+  crossPulseFretboard(note);
+  drawStaff(midi, note);
   playBassNote(midi, note, str, fret);
 }
 
-// ── Focus mode handler ──────────────────────────────────────────────────────
-document.getElementById('focus-btn').addEventListener('click', function() {
-  focusMode = !focusMode;
-  this.textContent = focusMode ? '🎯 Focus Frets 1–5: On' : '🎯 Focus Frets 1–5: Off';
-  this.classList.toggle('active', focusMode);
-  updateFretboard();
-  updatePattern();
+// ── Pattern hover → fretboard highlight ─────────────────────────────────────
+document.getElementById('pattern-display').addEventListener('mouseover', e => {
+  const badge = e.target.closest('.pattern-note-badge');
+  if (badge) { clearFretboardHighlight(); highlightOnFretboard(badge.dataset.note); }
 });
+document.getElementById('pattern-display').addEventListener('mouseout', e => {
+  if (e.target.closest('.pattern-note-badge')) clearFretboardHighlight();
+});
+
+// ── Cross-highlight & pulse helpers ─────────────────────────────────────────
+function highlightInPattern(noteName) {
+  document.querySelectorAll('.pattern-note-badge').forEach(b => {
+    if (b.dataset.note === noteName) b.classList.add('highlighted');
+  });
+}
+function clearPatternHighlight() {
+  document.querySelectorAll('.pattern-note-badge').forEach(b => b.classList.remove('highlighted'));
+}
+function highlightOnFretboard(noteName) {
+  document.querySelectorAll('.note-circle').forEach(c => {
+    if (c.closest('td').dataset.note === noteName && !c.classList.contains('dimmed'))
+      c.classList.add('highlighted');
+  });
+}
+function clearFretboardHighlight() {
+  document.querySelectorAll('.note-circle').forEach(c => c.classList.remove('highlighted'));
+}
+function crossPulseEl(el) {
+  el.style.animation = 'none';
+  void el.offsetHeight;
+  el.style.animation = 'crossPulse 0.55s ease-out';
+  setTimeout(() => { el.style.animation = ''; }, 600);
+}
+function crossPulsePattern(noteName) {
+  document.querySelectorAll('.pattern-note-badge').forEach(b => {
+    if (b.dataset.note === noteName) crossPulseEl(b);
+  });
+}
+function crossPulseFretboard(noteName) {
+  document.querySelectorAll('.note-circle').forEach(c => {
+    const td = c.closest('td');
+    if (td && td.dataset.note === noteName && !c.classList.contains('dimmed'))
+      crossPulseEl(c);
+  });
+}
 
 // ── Main update ──────────────────────────────────────────────────────────────
 function updateAll() {
@@ -588,6 +751,7 @@ function updateAll() {
 }
 
 updateAll();
+drawStaff(null, null);
 </script>
 </body>
 </html>
