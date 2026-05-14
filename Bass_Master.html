@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bass Master</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee;
+         min-height: 100vh; padding: 24px 16px 40px; user-select: none; }
+
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { font-size: 1.6em; color: #7ecef4; letter-spacing: 1px; }
+  header p  { font-size: 0.85em; color: #aaa; margin-top: 4px; }
+
+  .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .control-group { background: #16213e; border: 1px solid #2a4a7f;
+                   border-radius: 10px; padding: 12px 16px; }
+  .control-group label { display: block; font-size: 0.72em; font-weight: bold;
+    color: #7ecef4; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 9px; }
+  .btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .btn-group button { border: 2px solid transparent; border-radius: 6px; padding: 6px 13px;
+    font-size: 0.85em; font-weight: bold; cursor: pointer; background: #2a3a5a;
+    color: #ccc; transition: all 0.15s; min-width: 46px; }
+  .btn-group button:hover { filter: brightness(1.25); border-color: #7ecef4; }
+  .root-btn.active  { color:#fff; border-color:rgba(255,255,255,0.45);
+                      box-shadow:0 0 10px rgba(255,255,255,0.2); }
+  .scale-btn.active { background:#2563eb; color:#fff; border-color:#7ecef4; }
+
+  .audio-bar { display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:10px; background:#16213e; border:1px solid #2a4a7f;
+    border-radius:10px; padding:10px 16px; margin-bottom:12px; }
+  .now-playing { font-size:1em; color:#7ecef4; font-weight:bold;
+                 min-width:220px; letter-spacing:0.5px; }
+  .now-playing span { color:#fff; }
+  .audio-controls { display:flex; align-items:center; gap:14px; }
+  .audio-controls label { font-size:0.78em; color:#aaa; }
+  .audio-controls input[type=range] { width:90px; accent-color:#7ecef4; cursor:pointer; }
+  .mute-btn { background:#2a3a5a; border:1px solid #4a6a9f; border-radius:6px;
+    color:#ccc; padding:5px 12px; font-size:0.82em; cursor:pointer; }
+  .mute-btn:hover { border-color:#7ecef4; color:#fff; }
+  .mute-btn.muted { background:#5a1a1a; border-color:#c44; color:#f88; }
+  .focus-btn { background:#2a3a5a; border:1px solid #4a6a9f; border-radius:6px;
+    color:#ccc; padding:5px 12px; font-size:0.82em; cursor:pointer; }
+  .focus-btn:hover { border-color:#7ecef4; color:#fff; }
+  .focus-btn.active { background:#0d5a2a; border-color:#2ecc71; color:#2ecc71; }
+
+  .status { text-align:center; font-size:0.88em; color:#7ecef4;
+            margin-bottom:12px; min-height:20px; font-style:italic; }
+
+  .fretboard-wrap { overflow-x: auto; }
+  .fretboard { border-collapse:collapse; background:#5BC8F0; border-radius:10px;
+    overflow:hidden; min-width:900px; width:100%;
+    box-shadow:0 4px 24px rgba(0,0,0,0.5); }
+  .fretboard td, .fretboard th { padding:4px 2px; text-align:center; vertical-align:middle; }
+  .fret-header th { background:#1a4080; font-size:0.68em; color:#cce;
+    font-weight:bold; padding:5px 2px; min-width:36px; }
+  .fret-header .fret-num { color:#fff; }
+  .string-lbl { background:#0d2040; color:#7ecef4; font-size:1em;
+                font-weight:bold; width:36px; min-width:36px; }
+  .note-cell { height:42px; width:36px; min-width:36px;
+    border-right:1px solid rgba(0,60,100,0.3); cursor:pointer; }
+  .nut { border-right:4px solid #0d2040 !important; }
+  .note-circle { display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:50%; font-size:0.72em; font-weight:bold;
+    color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5);
+    box-shadow:0 2px 4px rgba(0,0,0,0.3);
+    transition:transform 0.1s, box-shadow 0.1s, opacity 0.2s; pointer-events:none; }
+  .note-circle.is-root {
+    box-shadow:0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.35), 0 2px 8px rgba(0,0,0,0.4); }
+  .note-circle.dimmed { background:#888 !important; color:#555;
+    box-shadow:none; text-shadow:none; opacity:0.32; }
+  @keyframes pulse {
+    0%   { transform:scale(1);    box-shadow:0 0 0 0   rgba(255,255,255,0.8); }
+    40%  { transform:scale(1.35); box-shadow:0 0 0 10px rgba(255,255,255,0); }
+    100% { transform:scale(1);    box-shadow:0 0 0 0   rgba(255,255,255,0); }
+  }
+  .note-circle.playing { animation:pulse 0.45s ease-out; }
+  .dot-row td { background:#4ab8e0; height:13px; font-size:0.68em; color:#0d4060; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%;
+         background:rgba(0,50,80,0.5); }
+
+  /* ── Scale Pattern Section ── */
+  .pattern-section {
+    margin-top: 22px;
+    background: #16213e;
+    border: 1px solid #2a4a7f;
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .pattern-section h2 {
+    font-size: 0.78em;
+    font-weight: bold;
+    color: #7ecef4;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .pattern-empty {
+    color: #666;
+    font-style: italic;
+    font-size: 0.88em;
+    text-align: center;
+    padding: 10px 0;
+  }
+  .pattern-strings { display: flex; flex-direction: column; gap: 14px; }
+
+  .pattern-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pattern-str-label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #7ecef4;
+    background: #0d2040;
+    border-radius: 6px;
+    padding: 4px 10px;
+    min-width: 42px;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .pattern-cells {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pattern-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .pattern-note-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .pattern-note-badge:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.4);
+  }
+  .pattern-note-badge.root-badge {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.4);
+  }
+  @keyframes badgePulse {
+    0%   { transform:scale(1);    box-shadow: 0 0 0 0   rgba(255,255,255,0.8); }
+    40%  { transform:scale(1.28); box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+    100% { transform:scale(1); }
+  }
+  .pattern-note-badge.playing { animation: badgePulse 0.4s ease-out; }
+
+  .pattern-pos-label {
+    font-size: 0.75em;
+    font-weight: bold;
+    color: #aac;
+    letter-spacing: 0.5px;
+    min-width: 38px;
+    text-align: center;
+  }
+
+  /* Arrow between notes */
+  .pattern-arrow {
+    font-size: 0.9em;
+    color: #4a6a9f;
+    margin-top: 10px;
+    align-self: center;
+  }
+
+  /* Legend */
+  .legend { margin-top:18px; display:flex; flex-wrap:wrap; gap:7px; justify-content:center; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:0.78em; color:#ccc; }
+  .legend-dot  { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
+
+  footer { text-align:center; margin-top:28px; font-size:0.72em; color:#555; }
+
+  @media print {
+    body { background:white; color:black; padding:8px; }
+    .controls,.audio-bar,.status,footer { display:none; }
+    .fretboard { min-width:unset; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Bass Master</h1>
+  <p>4 String &middot; Standard Tuning E &ndash; A &ndash; D &ndash; G &middot; Click any note to hear it</p>
+</header>
+
+<div class="controls">
+  <div class="control-group">
+    <label>Root Note</label>
+    <div class="btn-group" id="root-group"></div>
+  </div>
+  <div class="control-group">
+    <label>Scale Type</label>
+    <div class="btn-group" id="scale-group"></div>
+  </div>
+</div>
+
+<div class="audio-bar">
+  <div class="now-playing" id="now-playing">🔇 Click any note to play it</div>
+  <div class="audio-controls">
+    <label>Volume <input type="range" id="vol-slider" min="0" max="100" value="75"></label>
+    <label>Sustain <input type="range" id="sus-slider" min="5" max="40" value="18"></label>
+    <button class="mute-btn" id="mute-btn">🔊 Mute</button>
+    <button class="focus-btn" id="focus-btn">🎯 Focus Frets 1–5: Off</button>
+  </div>
+</div>
+
+<div class="status" id="status">Showing all 12 chromatic notes</div>
+
+<div class="fretboard-wrap">
+  <table class="fretboard" id="fretboard"></table>
+</div>
+
+<!-- Scale Pattern -->
+<div class="pattern-section">
+  <h2 id="pattern-heading">📋 Scale Pattern — open position (frets 0 – 7)</h2>
+  <div id="pattern-display"><p class="pattern-empty">Select a scale above to see the fingering pattern</p></div>
+</div>
+
+<div class="legend" id="legend"></div>
+<footer>Bass Master &mdash; Web Audio API &middot; built with HTML &amp; JavaScript</footer>
+
+<script>
+// ── Music data ───────────────────────────────────────────────────────────────
+const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const NOTE_COLORS = {
+  'C':'#E53E3E','C#':'#B83280','D':'#1D4ED8','D#':'#0891B2',
+  'E':'#EA580C','F':'#B8860B','F#':'#4D7C0F','G':'#16A34A',
+  'G#':'#0D9488','A':'#E07B00','A#':'#7E22CE','B':'#6B21A8'
+};
+
+const SCALES = {
+  'All Notes':        null,
+  'Major':            [0,2,4,5,7,9,11],
+  'Natural Minor':    [0,2,3,5,7,8,10],
+  'Pentatonic Major': [0,2,4,7,9],
+  'Pentatonic Minor': [0,3,5,7,10],
+  'Blues':            [0,3,5,6,7,10],
+  'Dorian':           [0,2,3,5,7,9,10],
+  'Mixolydian':       [0,2,4,5,7,9,10],
+  'Harmonic Minor':   [0,2,3,5,7,8,11],
+};
+
+// E→A→D→G (low to high): stored low-to-high for pattern, reversed for tab display
+const STRINGS = [
+  { name:'G', openIdx:7,  openMidi:43 },
+  { name:'D', openIdx:2,  openMidi:38 },
+  { name:'A', openIdx:9,  openMidi:33 },
+  { name:'E', openIdx:4,  openMidi:28 },
+];
+
+const NUM_FRETS   = 24;
+const PATTERN_MAX = 7;   // show frets 0-7 in pattern
+const SINGLE_DOTS = new Set([3,5,7,9,15,17,19,21]);
+const DOUBLE_DOTS = new Set([12,24]);
+
+let selectedRoot  = 'E';
+let selectedScale = 'Major';
+let muted = false;
+let focusMode = false;
+let audioCtx = null;
+let currentNodes = [];
+
+function midiToHz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+// ── Bass synthesiser ─────────────────────────────────────────────────────────
+function playBassNote(midi, noteName, stringName, fret) {
+  if (muted) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  currentNodes.forEach(n => { try { n.stop(); } catch(e){} });
+  currentNodes = [];
+
+  const hz  = midiToHz(midi);
+  const vol = document.getElementById('vol-slider').value / 100;
+  const sus = document.getElementById('sus-slider').value / 10;
+  const now = audioCtx.currentTime;
+
+  const osc1 = audioCtx.createOscillator();
+  osc1.type = 'triangle';
+  osc1.frequency.setValueAtTime(hz, now);
+
+  const osc2 = audioCtx.createOscillator();
+  osc2.type = 'sawtooth';
+  osc2.frequency.setValueAtTime(hz * 0.5, now);
+
+  const blend = audioCtx.createGain();
+  blend.gain.setValueAtTime(0.22, now);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(2800, now);
+  filter.frequency.exponentialRampToValueAtTime(320, now + 0.25);
+  filter.Q.value = 1.8;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.85, now + 0.008);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.45, now + 0.12);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.30, now + sus * 0.6);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + sus);
+
+  const comp = audioCtx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.knee.value = 8;
+  comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.15;
+
+  osc2.connect(blend); blend.connect(filter);
+  osc1.connect(filter); filter.connect(gain);
+  gain.connect(comp); comp.connect(audioCtx.destination);
+
+  osc1.start(now); osc2.start(now);
+  osc1.stop(now + sus + 0.1); osc2.stop(now + sus + 0.1);
+  currentNodes = [osc1, osc2];
+
+  const display = document.getElementById('now-playing');
+  display.innerHTML = `🔊 <span>${noteName}</span> &nbsp;·&nbsp; ${stringName} string fret ${fret} &nbsp;·&nbsp; ${hz.toFixed(1)} Hz`;
+}
+
+// ── Root note buttons ────────────────────────────────────────────────────────
+const rootGroup = document.getElementById('root-group');
+CHROMATIC.forEach(note => {
+  const btn = document.createElement('button');
+  btn.textContent = note;
+  btn.className = 'root-btn' + (note === selectedRoot ? ' active' : '');
+  if (note === selectedRoot) btn.style.background = NOTE_COLORS[note];
+  btn.addEventListener('click', () => {
+    selectedRoot = note;
+    document.querySelectorAll('.root-btn').forEach(b => {
+      const n = b.textContent;
+      b.classList.toggle('active', n === note);
+      b.style.background = n === note ? NOTE_COLORS[n] : '';
+    });
+    updateAll();
+  });
+  rootGroup.appendChild(btn);
+});
+
+// ── Scale buttons ────────────────────────────────────────────────────────────
+const scaleGroup = document.getElementById('scale-group');
+Object.keys(SCALES).forEach(scale => {
+  const btn = document.createElement('button');
+  btn.textContent = scale;
+  btn.className = 'scale-btn' + (scale === selectedScale ? ' active' : '');
+  btn.addEventListener('click', () => {
+    selectedScale = scale;
+    document.querySelectorAll('.scale-btn').forEach(b =>
+      b.classList.toggle('active', b.textContent === scale));
+    updateAll();
+  });
+  scaleGroup.appendChild(btn);
+});
+
+// ── Mute button ──────────────────────────────────────────────────────────────
+document.getElementById('mute-btn').addEventListener('click', function() {
+  muted = !muted;
+  this.textContent = muted ? '🔇 Unmute' : '🔊 Mute';
+  this.classList.toggle('muted', muted);
+  if (muted) {
+    currentNodes.forEach(n => { try { n.stop(); } catch(e){} });
+    document.getElementById('now-playing').textContent = '🔇 Muted';
+  }
+});
+
+// ── Build fretboard ──────────────────────────────────────────────────────────
+const table = document.getElementById('fretboard');
+const thead = table.createTHead();
+const hrow  = thead.insertRow();
+hrow.className = 'fret-header';
+const thLbl = document.createElement('th');
+thLbl.className = 'string-lbl'; hrow.appendChild(thLbl);
+for (let f = 0; f <= NUM_FRETS; f++) {
+  const th = document.createElement('th');
+  if (f === 0) th.innerHTML = '<span class="fret-num">Open</span>';
+  else if (SINGLE_DOTS.has(f)||DOUBLE_DOTS.has(f)) th.innerHTML = `<span class="fret-num">${f}</span>`;
+  hrow.appendChild(th);
+}
+
+const tbody = table.createTBody();
+STRINGS.forEach(str => {
+  const row = tbody.insertRow();
+  const lbl = row.insertCell();
+  lbl.className = 'string-lbl'; lbl.textContent = str.name;
+  for (let f = 0; f <= NUM_FRETS; f++) {
+    const noteIdx  = (str.openIdx + f) % 12;
+    const noteName = CHROMATIC[noteIdx];
+    const midi     = str.openMidi + f;
+    const td = row.insertCell();
+    td.className = 'note-cell' + (f === 0 ? ' nut' : '');
+    td.dataset.note = noteName;
+    td.dataset.fret = f;
+    td.dataset.string = str.name;
+    const circle = document.createElement('span');
+    circle.className = 'note-circle';
+    circle.style.background = NOTE_COLORS[noteName];
+    circle.textContent = noteName;
+    td.appendChild(circle);
+    td.addEventListener('click', () => {
+      circle.classList.remove('playing');
+      void circle.offsetWidth;
+      circle.classList.add('playing');
+      circle.addEventListener('animationend', () => circle.classList.remove('playing'), {once:true});
+      playBassNote(midi, noteName, str.name, f);
+    });
+  }
+});
+
+const dotRow = tbody.insertRow();
+dotRow.insertCell().className = 'string-lbl dot-row';
+for (let f = 0; f <= NUM_FRETS; f++) {
+  const td = dotRow.insertCell(); td.className = 'dot-row';
+  if (DOUBLE_DOTS.has(f))      td.innerHTML = '<span class="dot"></span>&nbsp;<span class="dot"></span>';
+  else if (SINGLE_DOTS.has(f)) td.innerHTML = '<span class="dot"></span>';
+}
+
+// ── Legend ───────────────────────────────────────────────────────────────────
+const legendEl = document.getElementById('legend');
+CHROMATIC.forEach(note => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.innerHTML = `<span class="legend-dot" style="background:${NOTE_COLORS[note]}"></span>${note}`;
+  legendEl.appendChild(item);
+});
+
+// ── Scale helpers ────────────────────────────────────────────────────────────
+function getScaleNotes(root, scaleName) {
+  const ivs = SCALES[scaleName];
+  if (!ivs) return null;
+  const ri = CHROMATIC.indexOf(root);
+  return new Set(ivs.map(i => CHROMATIC[(ri + i) % 12]));
+}
+
+// ── Fretboard update ─────────────────────────────────────────────────────────
+function updateFretboard() {
+  const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
+  document.querySelectorAll('.note-circle').forEach(circle => {
+    const note    = circle.closest('td').dataset.note;
+    const inScale = !scaleNotes || scaleNotes.has(note);
+    const isRoot  = note === selectedRoot && selectedScale !== 'All Notes';
+    const fret      = +circle.closest('td').dataset.fret;
+    const strName   = circle.closest('td').dataset.string;
+    const focusLimit = strName === 'G' ? 8 : 4;
+    const outOfFocus = focusMode && fret > focusLimit;
+    const isDimmed   = !inScale || outOfFocus;
+
+    // Drive ALL visual state via inline styles so nothing conflicts with CSS classes
+    if (outOfFocus) {
+      circle.style.background  = '#3a3a4a';
+      circle.style.opacity     = '0.18';
+      circle.style.boxShadow   = 'none';
+      circle.style.color       = 'transparent';
+    } else if (!inScale) {
+      circle.style.background  = '#666';
+      circle.style.opacity     = '0.35';
+      circle.style.boxShadow   = 'none';
+      circle.style.color       = '#555';
+    } else {
+      circle.style.background  = NOTE_COLORS[note];
+      circle.style.opacity     = '1';
+      circle.style.color       = '#fff';
+      circle.style.boxShadow   = inScale && isRoot
+        ? '0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.35)'
+        : '0 2px 4px rgba(0,0,0,0.3)';
+    }
+    circle.classList.toggle('dimmed',  isDimmed);
+    circle.classList.toggle('is-root', inScale && isRoot && !outOfFocus);
+  });
+  const statusEl = document.getElementById('status');
+  if (selectedScale === 'All Notes') {
+    statusEl.textContent = 'Showing all 12 chromatic notes';
+  } else {
+    const list = [...getScaleNotes(selectedRoot, selectedScale)].join('  ·  ');
+    statusEl.textContent =
+      `${selectedRoot} ${selectedScale}  (${SCALES[selectedScale].length} notes)   →   ${list}`;
+  }
+}
+
+// ── Pattern display ──────────────────────────────────────────────────────────
+function updatePattern() {
+  const patEl = document.getElementById('pattern-display');
+  const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
+
+  if (!scaleNotes) {
+    patEl.innerHTML = '<p class="pattern-empty">Select a scale above to see the fingering pattern</p>';
+    return;
+  }
+
+  // Strings displayed low→high: E, A, D, G (reverse of STRINGS array)
+  const stringsLowHigh = STRINGS; // G→D→A→E mirrors fretboard
+
+  // Update heading to reflect current range
+  const maxFret = focusMode ? 4 : PATTERN_MAX;
+  document.getElementById('pattern-heading').textContent =
+    focusMode
+      ? '📋 Scale Pattern — focus position (frets 1–5, G string to fret 8)'
+      : '📋 Scale Pattern — open position (frets 0 – 7)';
+
+  let rowsHtml = '';
+  stringsLowHigh.forEach(str => {
+    // Collect scale notes on this string up to maxFret
+    const strMaxFret = (focusMode && str.name === 'G') ? 8 : maxFret;
+    const cells = [];
+    for (let f = 0; f <= strMaxFret; f++) {
+      const noteName = CHROMATIC[(str.openIdx + f) % 12];
+      if (scaleNotes.has(noteName)) {
+        const midi = str.openMidi + f;
+        const pos  = f + 1;           // 1-indexed: open = 1
+        const posLabel = `${str.name}${pos}`;
+        const isRoot = noteName === selectedRoot;
+        cells.push({ noteName, fret: f, midi, pos, posLabel, isRoot });
+      }
+    }
+    if (cells.length === 0) return;
+
+    // Build cell HTML with arrows between
+    let cellsHtml = '';
+    cells.forEach((c, i) => {
+      const rootCls = c.isRoot ? ' root-badge' : '';
+      cellsHtml += `
+        <div class="pattern-cell">
+          <div class="pattern-note-badge${rootCls}"
+               style="background:${NOTE_COLORS[c.noteName]}"
+               data-midi="${c.midi}"
+               data-note="${c.noteName}"
+               data-string="${str.name}"
+               data-fret="${c.fret}"
+               onclick="patternPlay(this)">
+            ${c.noteName}
+          </div>
+          <div class="pattern-pos-label">${c.posLabel}</div>
+        </div>`;
+      if (i < cells.length - 1) {
+        cellsHtml += `<div class="pattern-arrow">→</div>`;
+      }
+    });
+
+    rowsHtml += `
+      <div class="pattern-row">
+        <div class="pattern-str-label">${str.name}</div>
+        <div class="pattern-cells">${cellsHtml}</div>
+      </div>`;
+  });
+
+  patEl.innerHTML = `<div class="pattern-strings">${rowsHtml}</div>`;
+}
+
+// ── Play a note from the pattern section ─────────────────────────────────────
+function patternPlay(el) {
+  const midi   = +el.dataset.midi;
+  const note   = el.dataset.note;
+  const str    = el.dataset.string;
+  const fret   = +el.dataset.fret;
+  el.classList.remove('playing');
+  void el.offsetWidth;
+  el.classList.add('playing');
+  el.addEventListener('animationend', () => el.classList.remove('playing'), {once:true});
+  playBassNote(midi, note, str, fret);
+}
+
+// ── Focus mode handler ──────────────────────────────────────────────────────
+document.getElementById('focus-btn').addEventListener('click', function() {
+  focusMode = !focusMode;
+  this.textContent = focusMode ? '🎯 Focus Frets 1–5: On' : '🎯 Focus Frets 1–5: Off';
+  this.classList.toggle('active', focusMode);
+  updateFretboard();
+  updatePattern();
+});
+
+// ── Main update ──────────────────────────────────────────────────────────────
+function updateAll() {
+  updateFretboard();
+  updatePattern();
+}
+
+updateAll();
+</script>
+</body>
+</html>
