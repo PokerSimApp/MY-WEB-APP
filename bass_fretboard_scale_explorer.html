@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bass Guitar Fretboard – Scale Explorer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    padding: 24px 16px 40px;
+  }
+
+  /* ── Header ── */
+  header { text-align: center; margin-bottom: 24px; }
+  header h1 { font-size: 1.6em; color: #7ecef4; letter-spacing: 1px; }
+  header p  { font-size: 0.85em; color: #aaa; margin-top: 4px; }
+
+  /* ── Control panels ── */
+  .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+
+  .control-group {
+    background: #16213e;
+    border: 1px solid #2a4a7f;
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .control-group label {
+    display: block;
+    font-size: 0.75em;
+    font-weight: bold;
+    color: #7ecef4;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+
+  /* Radio button groups */
+  .btn-group { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .btn-group button {
+    border: 2px solid transparent;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    background: #2a3a5a;
+    color: #ccc;
+    transition: all 0.15s;
+    min-width: 48px;
+  }
+  .btn-group button:hover { filter: brightness(1.2); border-color: #7ecef4; }
+
+  /* Root note buttons — active = note colour */
+  .root-btn.active  { color: #fff; border-color: rgba(255,255,255,0.4); box-shadow: 0 0 8px rgba(255,255,255,0.25); }
+
+  /* Scale buttons — active = bright blue */
+  .scale-btn.active { background: #2563eb; color: #fff; border-color: #7ecef4; }
+
+  /* ── Status bar ── */
+  .status {
+    text-align: center;
+    font-size: 0.9em;
+    color: #7ecef4;
+    margin-bottom: 16px;
+    min-height: 22px;
+    font-style: italic;
+  }
+
+  /* ── Fretboard wrapper (horizontal scroll on small screens) ── */
+  .fretboard-wrap { overflow-x: auto; }
+
+  /* ── Fretboard table ── */
+  .fretboard {
+    border-collapse: collapse;
+    background: #5BC8F0;
+    border-radius: 10px;
+    overflow: hidden;
+    min-width: 900px;
+    width: 100%;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+
+  .fretboard td, .fretboard th {
+    padding: 4px 2px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Fret number header row */
+  .fret-header { background: #1a4080; }
+  .fret-header th {
+    font-size: 0.68em;
+    color: #cce;
+    font-weight: bold;
+    padding: 5px 2px;
+    min-width: 36px;
+  }
+  .fret-header .fret-num { color: #fff; }
+  .fret-header .string-lbl { background: #0d2040; font-size: 0.75em; width: 36px; }
+
+  /* String label cells */
+  .string-lbl {
+    background: #0d2040;
+    color: #7ecef4;
+    font-size: 1em;
+    font-weight: bold;
+    width: 36px;
+    min-width: 36px;
+  }
+
+  /* Note cells */
+  .note-cell { height: 40px; width: 36px; min-width: 36px; border-right: 1px solid rgba(0,60,100,0.3); }
+  .note-cell:first-of-type { border-left: 3px solid #0d2040; }
+
+  /* Nut (fret 0) */
+  .nut { border-right: 4px solid #0d2040 !important; }
+
+  /* Note circle */
+  .note-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.72em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: opacity 0.2s, filter 0.2s;
+    position: relative;
+  }
+
+  /* Root note ring */
+  .note-circle.is-root {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.4), 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  /* Dimmed (not in scale) */
+  .note-circle.dimmed {
+    background: #888 !important;
+    color: #555;
+    box-shadow: none;
+    text-shadow: none;
+    opacity: 0.35;
+  }
+
+  /* Position dot row */
+  .dot-row td { background: #4ab8e0; height: 14px; font-size: 0.7em; color: #0d4060; }
+
+  /* ── Fret marker dots ── */
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: rgba(0,50,80,0.5); }
+
+  /* ── Legend ── */
+  .legend {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8em;
+    color: #ccc;
+  }
+  .legend-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.75em;
+    color: #555;
+  }
+
+  @media print {
+    body { background: white; color: black; padding: 8px; }
+    .controls, .status, footer { display: none; }
+    .fretboard { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Bass Guitar Fretboard — Scale Explorer</h1>
+  <p>4 String &middot; Standard Tuning E &ndash; A &ndash; D &ndash; G &middot; Frets 0&ndash;24</p>
+</header>
+
+<div class="controls">
+
+  <div class="control-group">
+    <label>Root Note</label>
+    <div class="btn-group" id="root-group"></div>
+  </div>
+
+  <div class="control-group">
+    <label>Scale Type</label>
+    <div class="btn-group" id="scale-group"></div>
+  </div>
+
+</div>
+
+<div class="status" id="status">Showing all 12 chromatic notes</div>
+
+<div class="fretboard-wrap">
+  <table class="fretboard" id="fretboard"></table>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<footer>Bass Guitar Fretboard Scale Explorer &mdash; built with HTML &amp; JavaScript</footer>
+
+<script>
+// ── Music data ──────────────────────────────────────────────────────────────
+const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const NOTE_COLORS = {
+  'C':'#E53E3E','C#':'#B83280','D':'#1D4ED8','D#':'#0891B2',
+  'E':'#EA580C','F':'#B8860B','F#':'#4D7C0F','G':'#16A34A',
+  'G#':'#0D9488','A':'#E07B00','A#':'#7E22CE','B':'#6B21A8'
+};
+
+const SCALES = {
+  'All Notes':        null,
+  'Major':            [0,2,4,5,7,9,11],
+  'Natural Minor':    [0,2,3,5,7,8,10],
+  'Pentatonic Major': [0,2,4,7,9],
+  'Pentatonic Minor': [0,3,5,7,10],
+  'Blues':            [0,3,5,6,7,10],
+  'Dorian':           [0,2,3,5,7,9,10],
+  'Mixolydian':       [0,2,4,5,7,9,10],
+  'Harmonic Minor':   [0,2,3,5,7,8,11],
+};
+
+// Open string notes (top to bottom: G, D, A, E)
+const STRINGS = [
+  { name: 'G', openIdx: 7 },
+  { name: 'D', openIdx: 2 },
+  { name: 'A', openIdx: 9 },
+  { name: 'E', openIdx: 4 },
+];
+
+const NUM_FRETS = 24;
+const SINGLE_DOTS = new Set([3,5,7,9,15,17,19,21]);
+const DOUBLE_DOTS = new Set([12,24]);
+
+// ── State ───────────────────────────────────────────────────────────────────
+let selectedRoot  = 'A';
+let selectedScale = 'All Notes';
+
+// ── Build root note buttons ─────────────────────────────────────────────────
+const rootGroup = document.getElementById('root-group');
+CHROMATIC.forEach(note => {
+  const btn = document.createElement('button');
+  btn.textContent = note;
+  btn.className   = 'btn-group root-btn' + (note === selectedRoot ? ' active' : '');
+  btn.style.background = note === selectedRoot ? NOTE_COLORS[note] : '';
+  btn.addEventListener('click', () => {
+    selectedRoot = note;
+    document.querySelectorAll('.root-btn').forEach(b => {
+      const n = b.textContent;
+      b.classList.toggle('active', n === note);
+      b.style.background = n === note ? NOTE_COLORS[n] : '';
+    });
+    updateFretboard();
+  });
+  rootGroup.appendChild(btn);
+});
+
+// ── Build scale buttons ─────────────────────────────────────────────────────
+const scaleGroup = document.getElementById('scale-group');
+Object.keys(SCALES).forEach(scale => {
+  const btn = document.createElement('button');
+  btn.textContent = scale;
+  btn.className   = 'scale-btn' + (scale === selectedScale ? ' active' : '');
+  btn.addEventListener('click', () => {
+    selectedScale = scale;
+    document.querySelectorAll('.scale-btn').forEach(b => b.classList.toggle('active', b.textContent === scale));
+    updateFretboard();
+  });
+  scaleGroup.appendChild(btn);
+});
+
+// ── Build fretboard ─────────────────────────────────────────────────────────
+const table = document.getElementById('fretboard');
+
+// Fret number header row
+const thead = table.createTHead();
+const hrow  = thead.insertRow();
+const thLabel = document.createElement('th');
+thLabel.className = 'string-lbl';
+hrow.appendChild(thLabel);
+
+for (let f = 0; f <= NUM_FRETS; f++) {
+  const th = document.createElement('th');
+  th.className = 'fret-header';
+  if (f === 0)                            th.innerHTML = '<span class="fret-num">Open</span>';
+  else if (SINGLE_DOTS.has(f) || DOUBLE_DOTS.has(f)) th.innerHTML = `<span class="fret-num">${f}</span>`;
+  hrow.appendChild(th);
+}
+
+// String rows + dot row
+const tbody = table.createTBody();
+
+STRINGS.forEach(str => {
+  const row = tbody.insertRow();
+
+  // String label
+  const lbl = row.insertCell();
+  lbl.className = 'string-lbl';
+  lbl.textContent = str.name;
+
+  for (let f = 0; f <= NUM_FRETS; f++) {
+    const noteIdx  = (str.openIdx + f) % 12;
+    const noteName = CHROMATIC[noteIdx];
+    const td = row.insertCell();
+    td.className  = 'note-cell' + (f === 0 ? ' nut' : '');
+    td.dataset.note = noteName;
+
+    const circle = document.createElement('span');
+    circle.className = 'note-circle';
+    circle.style.background = NOTE_COLORS[noteName];
+    circle.textContent = noteName;
+    td.appendChild(circle);
+  }
+});
+
+// Position dot row
+const dotRow = tbody.insertRow();
+const dotLbl = dotRow.insertCell();
+dotLbl.className = 'string-lbl dot-row';
+for (let f = 0; f <= NUM_FRETS; f++) {
+  const td = dotRow.insertCell();
+  td.className = 'dot-row';
+  if (DOUBLE_DOTS.has(f))      td.innerHTML = '<span class="dot"></span>&nbsp;<span class="dot"></span>';
+  else if (SINGLE_DOTS.has(f)) td.innerHTML = '<span class="dot"></span>';
+}
+
+// ── Legend ──────────────────────────────────────────────────────────────────
+const legendEl = document.getElementById('legend');
+CHROMATIC.forEach(note => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.innerHTML = `<span class="legend-dot" style="background:${NOTE_COLORS[note]}"></span>${note}`;
+  legendEl.appendChild(item);
+});
+
+// ── Update fretboard based on selection ─────────────────────────────────────
+function getScaleNotes(rootNote, scaleName) {
+  const intervals = SCALES[scaleName];
+  if (!intervals) return null; // All Notes
+  const rootIdx = CHROMATIC.indexOf(rootNote);
+  return new Set(intervals.map(i => CHROMATIC[(rootIdx + i) % 12]));
+}
+
+function updateFretboard() {
+  const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
+  const circles    = document.querySelectorAll('.note-circle');
+
+  circles.forEach(circle => {
+    const note    = circle.closest('td').dataset.note;
+    const inScale = !scaleNotes || scaleNotes.has(note);
+    const isRoot  = note === selectedRoot;
+
+    circle.classList.toggle('dimmed',   !inScale);
+    circle.classList.toggle('is-root',  inScale && isRoot && selectedScale !== 'All Notes');
+
+    if (!inScale) {
+      circle.style.background = '';
+    } else {
+      circle.style.background = NOTE_COLORS[note];
+    }
+  });
+
+  // Update status bar
+  const statusEl = document.getElementById('status');
+  if (selectedScale === 'All Notes') {
+    statusEl.textContent = 'Showing all 12 chromatic notes';
+  } else {
+    const scaleNotesList = [...getScaleNotes(selectedRoot, selectedScale)].join('  ·  ');
+    statusEl.textContent = `${selectedRoot} ${selectedScale}  (${SCALES[selectedScale].length} notes)   →   ${scaleNotesList}`;
+  }
+}
+
+// Initial render
+updateFretboard();
+</script>
+</body>
+</html>
