@@ -45,33 +45,46 @@
   .focus-btn:hover { border-color:#7ecef4; color:#fff; }
   .focus-btn.active { background:#0d5a2a; border-color:#2ecc71; color:#2ecc71; }
 
+  /* ── Bottom row: pattern + staff side by side ── */
+  .bottom-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 22px;
+  }
+  .pattern-section {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0 !important;
+  }
+
   /* ── Bass Clef Staff ── */
   .staff-section {
     background: #16213e;
     border: 1px solid #2a4a7f;
-    border-radius: 10px;
-    padding: 10px 16px 4px;
-    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 10px 12px 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex-shrink: 0;
+    width: 270px;
   }
   .staff-header {
     width: 100%;
-    max-width: 300px;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 4px;
   }
   .staff-header .staff-lbl {
-    font-size: 0.72em; font-weight: bold; color: #7ecef4;
-    text-transform: uppercase; letter-spacing: 1.5px;
+    font-size: 0.68em; font-weight: bold; color: #7ecef4;
+    text-transform: uppercase; letter-spacing: 1.2px;
   }
   .staff-header .staff-note-name {
-    font-size: 1.3em; font-weight: bold; color: #fff;
+    font-size: 1.1em; font-weight: bold; color: #fff;
   }
-  #staff-svg { display: block; max-width: 300px; width: 100%; }
+  #staff-svg { display: block; width: 100%; }
 
   .status { text-align:center; font-size:0.88em; color:#7ecef4;
             margin-bottom:12px; min-height:20px; font-style:italic; }
@@ -110,8 +123,9 @@
 
   /* ── Scale Pattern Section ── */
   .pattern-section {
-    margin-top: 22px; background: #16213e;
-    border: 1px solid #2a4a7f; border-radius: 12px; padding: 16px 20px;
+    background: #16213e;
+    border: 1px solid #2a4a7f; border-radius: 12px; padding: 14px 16px;
+    flex-shrink: 1;
   }
   .pattern-section h2 {
     font-size: 0.78em; font-weight: bold; color: #7ecef4;
@@ -119,6 +133,8 @@
   }
   .pattern-empty { color: #666; font-style: italic; font-size: 0.88em;
     text-align: center; padding: 10px 0; }
+  .pattern-tip { font-size: 0.78em; color: #7ecef4; font-style: italic;
+    opacity: 0.75; margin-bottom: 12px; line-height: 1.4; }
   .pattern-strings { display: flex; flex-direction: column; gap: 14px; }
   .pattern-row { display: flex; align-items: flex-start; gap: 12px; }
   .pattern-str-label {
@@ -166,6 +182,54 @@
   .legend-item { display:flex; align-items:center; gap:5px; font-size:0.78em; color:#ccc; }
   .legend-dot  { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
 
+  /* ── Song Player ── */
+  .song-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    background: #16213e; border: 1px solid #2a4a7f; border-radius: 10px;
+    padding: 10px 16px; margin-bottom: 12px;
+  }
+  .song-bar select {
+    background: #2a3a5a; color: #eee; border: 1px solid #4a6a9f;
+    border-radius: 6px; padding: 5px 10px; font-size: 0.85em; cursor: pointer;
+    flex: 1; min-width: 200px;
+  }
+  .song-play-btn {
+    background: #1a5bbf; color: #fff; border: none; border-radius: 6px;
+    padding: 6px 18px; font-size: 0.9em; font-weight: bold; cursor: pointer;
+  }
+  .song-play-btn:hover { background: #2563eb; }
+  .song-play-btn.playing { background: #7f1d1d; }
+  .song-bar label { font-size: 0.78em; color: #aaa; display: flex; align-items: center; gap: 6px; }
+  .song-bar input[type=range] { width: 80px; accent-color: #7ecef4; }
+  #tempo-display { color: #7ecef4; font-weight: bold; min-width: 38px; }
+  .song-lbl { font-size: 0.72em; font-weight: bold; color: #7ecef4;
+    text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; }
+  .octave-btn { background:#2a3a5a; border:1px solid #4a6a9f; border-radius:6px;
+    color:#ccc; padding:5px 12px; font-size:0.82em; font-weight:bold; cursor:pointer;
+    transition: all 0.15s; white-space: nowrap; }
+  .octave-btn:hover { border-color:#7ecef4; color:#fff; }
+  .octave-btn.active { background:#0d4a2a; border-color:#2ecc71; color:#2ecc71; }
+  .song-key-row {
+    display: none; flex-wrap: wrap; align-items: center; gap: 8px;
+    background: #12193a; border: 1px solid #2a4a7f; border-radius: 10px;
+    padding: 8px 16px; margin-bottom: 12px;
+  }
+  .key-btn {
+    border: 2px solid transparent; border-radius: 6px; padding: 5px 10px;
+    font-size: 0.82em; font-weight: bold; cursor: pointer;
+    background: #2a3a5a; color: #ccc; transition: all 0.15s; min-width: 38px;
+  }
+  .key-btn:hover { filter: brightness(1.3); border-color: #7ecef4; }
+  .key-btn.active { color: #fff; border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+  @keyframes songPulse {
+    0%   { transform:scale(1);    box-shadow:0 0 0 0   rgba(255,255,255,1); }
+    40%  { transform:scale(1.45); box-shadow:0 0 0 14px rgba(255,255,255,0); }
+    100% { transform:scale(1);    box-shadow:0 0 0 0   rgba(255,255,255,0); }
+  }
+  .note-circle.song-pulse { animation: songPulse 0.4s ease-out; }
+
   footer { text-align:center; margin-top:28px; font-size:0.72em; color:#555; }
 
   @media print {
@@ -203,13 +267,29 @@
   </div>
 </div>
 
-<!-- Bass Clef Staff -->
-<div class="staff-section">
-  <div class="staff-header">
-    <span class="staff-lbl">🎵 Bass Clef Staff</span>
-    <span class="staff-note-name" id="staff-note-name">—</span>
-  </div>
-  <svg id="staff-svg" viewBox="0 0 300 260" width="300" height="260"></svg>
+<!-- Song Player -->
+<div class="song-bar">
+  <span class="song-lbl">🎵 Play a Song</span>
+  <select id="song-select">
+    <option value="">— choose a song —</option>
+    <option value="seven_nation_army">Seven Nation Army – White Stripes</option>
+    <option value="another_one">Another One Bites the Dust – Queen</option>
+    <option value="smoke_water">Smoke on the Water – Deep Purple</option>
+    <option value="come_together">Come Together – The Beatles</option>
+    <option value="billie_jean">Billie Jean – Michael Jackson</option>
+    <option value="should_i_stay">Should I Stay or Should I Go – The Clash</option>
+  </select>
+  <button class="song-play-btn" id="song-play-btn">▶ Play</button>
+  <button class="octave-btn" id="octave-btn" title="Play one octave higher with correct fingering">🔼 +8va</button>
+  <label>Speed
+    <input type="range" id="tempo-slider" min="50" max="150" value="100">
+    <span id="tempo-display">100%</span>
+  </label>
+</div>
+
+<div class="song-key-row" id="song-key-row">
+  <span class="song-lbl">🎹 Key</span>
+  <div class="btn-group" id="song-key-group"></div>
 </div>
 
 <div class="status" id="status">Showing all 12 chromatic notes</div>
@@ -218,9 +298,19 @@
   <table class="fretboard" id="fretboard"></table>
 </div>
 
-<div class="pattern-section">
-  <h2 id="pattern-heading">📋 Scale Pattern — open position (frets 0 – 7)</h2>
-  <div id="pattern-display"><p class="pattern-empty">Select a scale above to see the fingering pattern</p></div>
+<div class="bottom-row">
+  <div class="pattern-section">
+    <h2 id="pattern-heading">📋 Scale Pattern — open position (frets 0 – 7)</h2>
+    <p class="pattern-tip">💡 Focus on the finger patterns and then you can play this sequence anywhere on the fretboard</p>
+    <div id="pattern-display"><p class="pattern-empty">Select a scale above to see the fingering pattern</p></div>
+  </div>
+  <div class="staff-section">
+    <div class="staff-header">
+      <span class="staff-lbl">🎵 Bass Clef</span>
+      <span class="staff-note-name" id="staff-note-name">—</span>
+    </div>
+    <svg id="staff-svg" viewBox="0 0 260 260" width="260" height="260"></svg>
+  </div>
 </div>
 
 <div class="legend" id="legend"></div>
@@ -326,9 +416,9 @@ function playBassNote(midi, noteName, stringName, fret) {
 // ── Bass Clef Staff ──────────────────────────────────────────────────────────
 const SVG_NS    = 'http://www.w3.org/2000/svg';
 const STEP_H    = 8;    // px per staff step (half-space)
-const STAFF_X   = 60;   // left edge of staff lines
-const STAFF_W   = 210;  // width of staff lines
-const NOTE_X    = 210;  // x of note head
+const STAFF_X   = 55;   // left edge of staff lines
+const STAFF_W   = 185;  // width of staff lines
+const NOTE_X    = 185;  // x of note head
 const STAFF_BOT = 185;  // y of bottom staff line (G2, pos=0)
 
 function midiToStaffInfo(midi) {
@@ -352,7 +442,7 @@ function drawStaff(midi, noteName) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
 
   // Dark background
-  svg.appendChild(mkEl('rect', { x:0, y:0, width:300, height:260, fill:'#0d1830', rx:6 }));
+  svg.appendChild(mkEl('rect', { x:0, y:0, width:260, height:260, fill:'#0d1830', rx:6 }));
 
   // ── 5 staff lines ──
   for (let i = 0; i < 5; i++) {
@@ -387,7 +477,9 @@ function drawStaff(midi, noteName) {
 
   const { pos, acc } = midiToStaffInfo(midi);
   const noteY     = STAFF_BOT - pos * STEP_H;
-  const noteColor = NOTE_COLORS[noteName] || '#ffffff';
+  // noteName may arrive as 'D2' (song player) or 'D' (fretboard click) — strip octave digit
+  const noteBase  = noteName.replace(/\d+$/, '');
+  const noteColor = NOTE_COLORS[noteBase] || '#ffffff';
 
   // ── Ledger lines ──
   const ledgerW = STEP_H * 2.2;
@@ -440,7 +532,7 @@ function drawStaff(midi, noteName) {
 
   // ── Note label below staff ──
   const octave   = Math.floor(midi / 12) - 1;
-  const octLabel = `${noteName}${octave}`;
+  const octLabel = `${noteBase}${octave}`; // always "D2" never "D22"
   svg.appendChild(mkEl('text', {
     x: NOTE_X, y: 250,
     'text-anchor': 'middle', 'font-size': 14,
@@ -533,6 +625,7 @@ STRINGS.forEach(str => {
     td.dataset.note   = noteName;
     td.dataset.fret   = f;
     td.dataset.string = str.name;
+    td.dataset.midi   = midi;
     const circle = document.createElement('span');
     circle.className = 'note-circle';
     circle.style.background = NOTE_COLORS[noteName];
@@ -732,8 +825,15 @@ function crossPulseEl(el) {
   setTimeout(() => { el.style.animation = ''; }, 600);
 }
 function crossPulsePattern(noteName) {
+  // Used by manual fretboard/pattern clicks — pulses all badges of that note name
   document.querySelectorAll('.pattern-note-badge').forEach(b => {
     if (b.dataset.note === noteName) crossPulseEl(b);
+  });
+}
+function crossPulsePatternByMidi(midi) {
+  // Used by song player — pulses only the exact note at that MIDI value
+  document.querySelectorAll('.pattern-note-badge').forEach(b => {
+    if (+b.dataset.midi === midi) crossPulseEl(b);
   });
 }
 function crossPulseFretboard(noteName) {
@@ -748,6 +848,390 @@ function crossPulseFretboard(noteName) {
 function updateAll() {
   updateFretboard();
   updatePattern();
+}
+
+// ── Song data ────────────────────────────────────────────────────────────────
+// Each note: { midi, name, str, fret, dur }  dur = beats (quarter=1.0)
+// str = string name ('E','A','D','G'), null midi = rest
+const SONGS = {
+  // ── Seven Nation Army ─────────────────────────────────────────────────────
+  // A string: 7-7-10-7-5-3-2  (E2 E2 G2 E2 D2 C2 B1)
+  // Key fix: last note is B natural (not Bb), dotted-quarter feel on opening E
+  seven_nation_army: {
+    title: 'Seven Nation Army', artist: 'The White Stripes', bpm: 124, tonic: 'E',
+    notes: [
+      {midi:40,name:'E2',str:'A',fret:7,  dur:1.5}, // dotted quarter
+      {midi:40,name:'E2',str:'A',fret:7,  dur:0.5},
+      {midi:43,name:'G2',str:'A',fret:10, dur:0.5},
+      {midi:40,name:'E2',str:'A',fret:7,  dur:1.0},
+      {midi:38,name:'D2',str:'A',fret:5,  dur:1.0}, // A string fret 5 — same string as the whole riff
+      {midi:36,name:'C2',str:'A',fret:3,  dur:1.0},
+      {midi:35,name:'B1',str:'A',fret:2,  dur:2.0}, // B natural, NOT Bb
+      {midi:40,name:'E2',str:'A',fret:7,  dur:1.5},
+      {midi:40,name:'E2',str:'A',fret:7,  dur:0.5},
+      {midi:43,name:'G2',str:'A',fret:10, dur:0.5},
+      {midi:40,name:'E2',str:'A',fret:7,  dur:1.0},
+      {midi:38,name:'D2',str:'A',fret:5,  dur:1.0},
+      {midi:36,name:'C2',str:'A',fret:3,  dur:1.0},
+      {midi:35,name:'B1',str:'A',fret:2,  dur:2.0},
+    ]
+  },
+
+  // ── Another One Bites the Dust ────────────────────────────────────────────
+  // E string open (0) driving pattern, then G(3) A(5) flourish
+  // Rhythm: three quick E hits, gap, then G-A answer phrase
+  another_one: {
+    title: 'Another One Bites the Dust', artist: 'Queen', bpm: 110, tonic: 'E',
+    notes: [
+      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
+      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
+      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
+      {midi:null,name:'',str:'',fret:0,  dur:0.25},
+      {midi:31,name:'G1',str:'E',fret:3, dur:0.25},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.75},
+      {midi:null,name:'',str:'',fret:0,  dur:0.75},
+      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
+      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
+      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
+      {midi:null,name:'',str:'',fret:0,  dur:0.25},
+      {midi:31,name:'G1',str:'E',fret:3, dur:0.25},
+      {midi:34,name:'Bb1',str:'A',fret:1,dur:0.5}, // Bb passing note
+      {midi:33,name:'A1',str:'A',fret:0, dur:1.5},
+    ]
+  },
+
+  // ── Smoke on the Water ────────────────────────────────────────────────────
+  // Classic triplet-feel riff: G-Bb-C | G-Bb-Db-C | G-Bb-C-Bb-G
+  // Classic tab: ALL on E string — frets 3-6-8 | 3-6-9-8 | 3-6-8-6-3
+  smoke_water: {
+    title: 'Smoke on the Water', artist: 'Deep Purple', bpm: 108, tonic: 'G',
+    notes: [
+      {midi:31,name:'G1', str:'E',fret:3, dur:0.67},
+      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.67}, // E fret 6
+      {midi:36,name:'C2', str:'E',fret:8, dur:0.67}, // E fret 8
+      {midi:null,name:'', str:'',fret:0,  dur:1.0 },
+      {midi:31,name:'G1', str:'E',fret:3, dur:0.67},
+      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.67},
+      {midi:37,name:'Db2',str:'E',fret:9, dur:0.5 }, // E fret 9
+      {midi:36,name:'C2', str:'E',fret:8, dur:0.67},
+      {midi:null,name:'', str:'',fret:0,  dur:0.67},
+      {midi:31,name:'G1', str:'E',fret:3, dur:0.67},
+      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.67},
+      {midi:36,name:'C2', str:'E',fret:8, dur:0.5 },
+      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.33},
+      {midi:31,name:'G1', str:'E',fret:3, dur:1.5 },
+    ]
+  },
+
+  // ── Come Together ─────────────────────────────────────────────────────────
+  // Paul McCartney's swampy D-based riff
+  // Driving repeated D with chromatic walk A-G at the end
+  come_together: {
+    title: 'Come Together', artist: 'The Beatles', bpm: 84, tonic: 'D',
+    notes: [
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5 },
+      {midi:31,name:'G1',str:'E',fret:3, dur:1.5 },
+      {midi:null,name:'',str:'',fret:0,  dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5 },
+      {midi:31,name:'G1',str:'E',fret:3, dur:2.0 },
+    ]
+  },
+
+  // ── Should I Stay or Should I Go ─────────────────────────────────────────
+  // The Clash (1982) — Paul Simonon, key of D, ~113 BPM
+  // Verse riff: pumping D2 8ths → jump to G2 → back down A1-D2
+  // Chorus: D-G-D-G-A-D progression, full first verse + chorus
+  should_i_stay: {
+    title: 'Should I Stay or Should I Go', artist: 'The Clash', bpm: 113, tonic: 'D',
+    notes: [
+      // ── VERSE ── "Darling you got to let me know..." (4 × 2-bar riff)
+      // Riff 1 ── "Darling you got to let me know"
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      // Riff 2 ── "Should I stay or should I go?"
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      // Riff 3 ── "If I go, there will be trouble"
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.25},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
+      // Riff 4 ── "An' if I stay it will be double" → builds to chorus
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      // ── CHORUS ── "Should I stay or should I go now..." (4 phrases)
+      // Phrase 1 ── "Should I stay or should I go now?"
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:1.0},
+      // Phrase 2 ── "Should I stay or should I go now?"
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:1.0},
+      // Phrase 3 ── "If I go there will be trouble"
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:1.0},
+      // Phrase 4 ── "So you gotta let me know" — big finish on D
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
+      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
+      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
+      {midi:38,name:'D2',str:'D',fret:0, dur:2.0},
+    ]
+  },
+
+  // ── Billie Jean ───────────────────────────────────────────────────────────
+  // Louis Johnson's F# minor groove — played on D string, mid register
+  // F#2=D4, A2=D7, B2=D9  (one octave higher than before — much clearer tone)
+  billie_jean: {
+    title: 'Billie Jean', artist: 'Michael Jackson', bpm: 117, tonic: 'F#',
+    notes: [
+      {midi:42,name:'F#2',str:'D',fret:4, dur:0.5 },
+      {midi:45,name:'A2', str:'D',fret:7, dur:0.5 },
+      {midi:47,name:'B2', str:'D',fret:9, dur:0.5 },
+      {midi:45,name:'A2', str:'D',fret:7, dur:0.25},
+      {midi:42,name:'F#2',str:'D',fret:4, dur:0.25},
+      {midi:null,name:'', str:'',fret:0,  dur:0.5 },
+      {midi:45,name:'A2', str:'D',fret:7, dur:0.5 },
+      {midi:47,name:'B2', str:'D',fret:9, dur:0.5 },
+      {midi:42,name:'F#2',str:'D',fret:4, dur:0.5 },
+      {midi:45,name:'A2', str:'D',fret:7, dur:0.5 },
+      {midi:47,name:'B2', str:'D',fret:9, dur:0.5 },
+      {midi:45,name:'A2', str:'D',fret:7, dur:0.25},
+      {midi:42,name:'F#2',str:'D',fret:4, dur:0.25},
+      {midi:null,name:'', str:'',fret:0,  dur:0.25},
+      {midi:40,name:'E2', str:'D',fret:2, dur:0.25},
+      {midi:42,name:'F#2',str:'D',fret:4, dur:1.5 },
+    ]
+  }
+};
+
+// ── Song sequencer ────────────────────────────────────────────────────────────
+let songPlaying  = false;
+let songTimers   = [];
+let songTranspose = 0;  // semitone offset from original key
+let songOctave   = 0;   // 0 = normal, 12 = one octave higher
+
+document.getElementById('octave-btn').addEventListener('click', () => {
+  if (songPlaying) stopSong();
+  songOctave = songOctave === 0 ? 12 : 0;
+  const btn = document.getElementById('octave-btn');
+  btn.classList.toggle('active', songOctave === 12);
+  btn.textContent = songOctave === 12 ? '🔼 +8va ON' : '🔼 +8va';
+});
+
+// ── Key buttons ──────────────────────────────────────────────────────────────
+function buildKeyButtons(song) {
+  const group  = document.getElementById('song-key-group');
+  const keyRow = document.getElementById('song-key-row');
+  group.innerHTML = '';
+  keyRow.style.display = 'flex';
+  const tonicIdx = CHROMATIC.indexOf(song.tonic);
+
+  CHROMATIC.forEach((note, ni) => {
+    const btn = document.createElement('button');
+    btn.textContent = note;
+    btn.className = 'key-btn' + (note === song.tonic ? ' active' : '');
+    if (note === song.tonic) btn.style.background = NOTE_COLORS[note];
+    btn.addEventListener('click', () => {
+      if (songPlaying) stopSong();
+      // shortest-path semitone offset
+      let diff = ni - tonicIdx;
+      if (diff > 6) diff -= 12;
+      if (diff < -6) diff += 12;
+      songTranspose = diff;
+      group.querySelectorAll('.key-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent === note);
+        b.style.background = b.textContent === note ? NOTE_COLORS[note] : '';
+      });
+    });
+    group.appendChild(btn);
+  });
+}
+
+document.getElementById('song-select').addEventListener('change', function() {
+  if (songPlaying) stopSong();
+  songTranspose = 0;
+  const key = this.value;
+  if (key) {
+    buildKeyButtons(SONGS[key]);
+  } else {
+    document.getElementById('song-key-row').style.display = 'none';
+  }
+});
+
+document.getElementById('tempo-slider').addEventListener('input', function() {
+  document.getElementById('tempo-display').textContent = this.value + '%';
+});
+
+document.getElementById('song-play-btn').addEventListener('click', () => {
+  if (songPlaying) { stopSong(); return; }
+  const key  = document.getElementById('song-select').value;
+  if (!key) return;
+  playSong(SONGS[key]);
+});
+
+function stopSong() {
+  songPlaying = false;
+  songTimers.forEach(t => clearTimeout(t));
+  songTimers = [];
+  document.querySelectorAll('.note-circle.song-highlight')
+    .forEach(c => c.classList.remove('song-highlight'));
+  const btn = document.getElementById('song-play-btn');
+  btn.textContent = '▶ Play';
+  btn.classList.remove('playing');
+}
+
+function playSong(song) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  songPlaying = true;
+  const btn = document.getElementById('song-play-btn');
+  btn.textContent = '■ Stop';
+  btn.classList.add('playing');
+
+  const speedPct  = +document.getElementById('tempo-slider').value / 100;
+  const beatSecs  = (60 / song.bpm) / speedPct;
+  const now       = audioCtx.currentTime + 0.05;
+  let   offset    = 0;
+
+  song.notes.forEach(note => {
+    const when    = now + offset;
+    const noteDur = note.dur * beatSecs;
+
+    if (note.midi !== null) {
+      const tMidi = note.midi + songTranspose + songOctave; // transposed + octave shift
+      const tName = CHROMATIC[((tMidi % 12) + 12) % 12];  // transposed note name
+
+      // ── Schedule audio ──
+      scheduleSongNote(tMidi, when, noteDur * 0.82);
+
+      // ── Schedule visuals ──
+      const ms = offset * 1000;
+      songTimers.push(setTimeout(() => {
+        if (!songPlaying) return;
+        drawStaff(tMidi, tName);
+        // Fretboard highlight — find cell by transposed MIDI value
+        const td = document.querySelector(`td[data-midi="${tMidi}"]`);
+        if (td) {
+          const circle = td.querySelector('.note-circle');
+          if (circle) {
+            document.querySelectorAll('.note-circle.song-highlight')
+              .forEach(c => c.classList.remove('song-highlight'));
+            circle.classList.add('song-highlight');
+            circle.style.animation = 'none';
+            void circle.offsetHeight;
+            circle.style.animation = 'songPulse 0.4s ease-out';
+            setTimeout(() => { circle.style.animation = ''; }, 450);
+          }
+        }
+        // Scale pattern pulse — exact MIDI match only, not all notes of that name
+        crossPulsePatternByMidi(tMidi);
+        // Now-playing display
+        const fretInfo = td ? `${td.dataset.string} string fret ${td.dataset.fret}` : '—';
+        const hz = midiToHz(tMidi).toFixed(1);
+        document.getElementById('now-playing').innerHTML =
+          `🎵 <span>${tName}</span> &nbsp;·&nbsp; ${fretInfo} &nbsp;·&nbsp; ${hz} Hz`;
+      }, ms));
+    }
+    offset += noteDur;
+  });
+
+  // End of song
+  songTimers.push(setTimeout(() => {
+    stopSong();
+    document.getElementById('now-playing').textContent = '✅ Finished — click Play again';
+  }, offset * 1000 + 100));
+}
+
+function scheduleSongNote(midi, when, duration) {
+  const hz  = midiToHz(midi);
+  const vol = document.getElementById('vol-slider').value / 100;
+
+  const osc1   = audioCtx.createOscillator();
+  const osc2   = audioCtx.createOscillator();
+  const blend  = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  const gain   = audioCtx.createGain();
+  const comp   = audioCtx.createDynamicsCompressor();
+
+  osc1.type = 'triangle';
+  osc1.frequency.setValueAtTime(hz, when);
+  osc2.type = 'sawtooth';
+  osc2.frequency.setValueAtTime(hz * 0.5, when);
+  blend.gain.setValueAtTime(0.22, when);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(2800, when);
+  filter.frequency.exponentialRampToValueAtTime(320, when + 0.25);
+  filter.Q.value = 1.8;
+
+  gain.gain.setValueAtTime(0.001, when);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.85, when + 0.008);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.45, when + 0.12);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.30, when + duration * 0.6);
+  gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
+
+  comp.threshold.value = -18; comp.knee.value = 8;
+  comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.15;
+
+  osc2.connect(blend); blend.connect(filter);
+  osc1.connect(filter); filter.connect(gain);
+  gain.connect(comp); comp.connect(audioCtx.destination);
+
+  osc1.start(when); osc2.start(when);
+  osc1.stop(when + duration + 0.05); osc2.stop(when + duration + 0.05);
 }
 
 updateAll();
