@@ -223,6 +223,31 @@
   .key-btn.active { color: #fff; border-color: rgba(255,255,255,0.5);
     box-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
+  /* ── Metronome ── */
+  .metro-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    background: #16213e; border: 1px solid #2a4a7f; border-radius: 10px;
+    padding: 10px 16px; margin-bottom: 12px;
+  }
+  .metro-bar label { font-size: 0.78em; color: #aaa; display: flex; align-items: center; gap: 6px; }
+  .metro-bar input[type=range] { accent-color: #7ecef4; cursor: pointer; }
+  .metro-btn {
+    background: #1a5bbf; color: #fff; border: none; border-radius: 6px;
+    padding: 6px 16px; font-size: 0.9em; font-weight: bold; cursor: pointer; transition: background 0.15s;
+  }
+  .metro-btn:hover  { background: #2563eb; }
+  .metro-btn.active { background: #7f1d1d; }
+  .metro-bpm-display { color: #7ecef4; font-weight: bold; min-width: 52px; font-size: 0.9em; }
+  .metro-beats { display: flex; gap: 8px; align-items: center; }
+  .metro-beat {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #2a3a5a; border: 2px solid #3a5a8f;
+    transition: background 0.05s, box-shadow 0.05s;
+  }
+  .metro-beat.accent { width: 22px; height: 22px; border-color: #5a8abf; }
+  .metro-beat.lit    { background: #7ecef4; box-shadow: 0 0 10px #7ecef4; }
+  .metro-beat.accent.lit { background: #fff; box-shadow: 0 0 14px #fff; }
+
   @keyframes songPulse {
     0%   { transform:scale(1);    box-shadow:0 0 0 0   rgba(255,255,255,1); }
     40%  { transform:scale(1.45); box-shadow:0 0 0 14px rgba(255,255,255,0); }
@@ -265,6 +290,25 @@
     <button class="mute-btn" id="mute-btn">🔊 Mute</button>
     <button class="focus-btn" id="focus-btn">🎯 Focus Frets 1–5: Off</button>
   </div>
+</div>
+
+<!-- Metronome -->
+<div class="metro-bar">
+  <span class="song-lbl">🥁 Metronome</span>
+  <button class="metro-btn" id="metro-btn">▶ Start</button>
+  <div class="metro-beats">
+    <div class="metro-beat accent" id="mb0"></div>
+    <div class="metro-beat" id="mb1"></div>
+    <div class="metro-beat" id="mb2"></div>
+    <div class="metro-beat" id="mb3"></div>
+  </div>
+  <label>BPM
+    <input type="range" id="metro-bpm" min="40" max="240" value="100" style="width:110px">
+    <span class="metro-bpm-display" id="metro-bpm-display">100 BPM</span>
+  </label>
+  <label>Vol
+    <input type="range" id="metro-vol" min="0" max="100" value="60" style="width:80px">
+  </label>
 </div>
 
 <!-- Song Player -->
@@ -1236,6 +1280,95 @@ function scheduleSongNote(midi, when, duration) {
 
 updateAll();
 drawStaff(null, null);
+
+// ── Metronome ─────────────────────────────────────────────────────────────────
+(function() {
+  const LOOKAHEAD   = 0.1;   // seconds to schedule ahead
+  const INTERVAL_MS = 25;    // scheduler polling interval
+
+  let metRunning  = false;
+  let metBeat     = 0;       // current beat (0-3)
+  let nextBeatAt  = 0;       // audioCtx time of next click
+  let metTimer    = null;
+  const beatEls   = [0,1,2,3].map(i => document.getElementById('mb' + i));
+
+  // BPM & volume controls
+  const bpmSlider  = document.getElementById('metro-bpm');
+  const bpmDisplay = document.getElementById('metro-bpm-display');
+  const volSlider  = document.getElementById('metro-vol');
+  const metBtn     = document.getElementById('metro-btn');
+
+  bpmSlider.addEventListener('input', () => {
+    bpmDisplay.textContent = bpmSlider.value + ' BPM';
+  });
+
+  function getBpm() { return +bpmSlider.value; }
+  function getVol() { return +volSlider.value / 100; }
+
+  function scheduleClick(time, isAccent) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const vol  = getVol();
+    const freq = isAccent ? 1200 : 900;
+    const gain = isAccent ? vol : vol * 0.55;
+
+    const osc  = audioCtx.createOscillator();
+    const env  = audioCtx.createGain();
+    osc.connect(env);
+    env.connect(audioCtx.destination);
+
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    env.gain.setValueAtTime(gain, time);
+    env.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+
+    osc.start(time);
+    osc.stop(time + 0.045);
+  }
+
+  function flashBeat(beat) {
+    beatEls.forEach((el, i) => el.classList.toggle('lit', i === beat));
+    setTimeout(() => { if (beatEls[beat]) beatEls[beat].classList.remove('lit'); }, 80);
+  }
+
+  function scheduler() {
+    if (!audioCtx) return;
+    while (nextBeatAt < audioCtx.currentTime + LOOKAHEAD) {
+      const isAccent = (metBeat === 0);
+      scheduleClick(nextBeatAt, isAccent);
+
+      // Visual flash — calculated ms from now
+      const delayMs = Math.max(0, (nextBeatAt - audioCtx.currentTime) * 1000);
+      const beat = metBeat;
+      setTimeout(() => flashBeat(beat), delayMs);
+
+      nextBeatAt += 60 / getBpm();
+      metBeat = (metBeat + 1) % 4;
+    }
+  }
+
+  function startMetronome() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    metRunning = true;
+    metBeat    = 0;
+    nextBeatAt = audioCtx.currentTime + 0.05;
+    metTimer   = setInterval(scheduler, INTERVAL_MS);
+    metBtn.textContent = '■ Stop';
+    metBtn.classList.add('active');
+  }
+
+  function stopMetronome() {
+    metRunning = false;
+    clearInterval(metTimer);
+    beatEls.forEach(el => el.classList.remove('lit'));
+    metBtn.textContent = '▶ Start';
+    metBtn.classList.remove('active');
+  }
+
+  metBtn.addEventListener('click', () => {
+    metRunning ? stopMetronome() : startMetronome();
+  });
+})();
 </script>
 </body>
 </html>
