@@ -102,11 +102,13 @@
   .note-cell { height:42px; width:36px; min-width:36px;
     border-right:1px solid rgba(0,60,100,0.3); cursor:pointer; }
   .nut { border-right:4px solid #0d2040 !important; }
-  .note-circle { display:inline-flex; align-items:center; justify-content:center;
-    width:30px; height:30px; border-radius:50%; font-size:0.72em; font-weight:bold;
+  .note-circle { display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:50%; font-size:0.62em; font-weight:bold;
     color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5);
-    box-shadow:0 2px 4px rgba(0,0,0,0.3);
+    box-shadow:0 2px 4px rgba(0,0,0,0.3); line-height:1.15;
     transition:transform 0.1s, box-shadow 0.1s, opacity 0.2s; pointer-events:none; }
+  .nc-note { font-size:1em; font-weight:bold; }
+  .nc-pos  { font-size:0.82em; opacity:0.88; font-weight:normal; }
   .note-circle.is-root {
     box-shadow:0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.35), 0 2px 8px rgba(0,0,0,0.4); }
   .note-circle.dimmed { background:#888 !important; color:#555;
@@ -145,13 +147,17 @@
   .pattern-cells { display: flex; flex-wrap: wrap; gap: 8px; }
   .pattern-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .pattern-note-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; border-radius: 50%;
-    font-size: 0.8em; font-weight: bold; color: #fff;
+    display: inline-flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    width: 46px; height: 46px; border-radius: 50%;
+    font-size: 0.78em; font-weight: bold; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
+    line-height: 1.2; gap: 1px;
   }
+  .badge-note { font-size: 1em; font-weight: bold; }
+  .badge-fret { font-size: 0.78em; opacity: 0.9; font-weight: normal; }
   .pattern-note-badge:hover {
     transform: scale(1.12);
     box-shadow: 0 0 0 3px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.4);
@@ -173,8 +179,8 @@
   }
 
   .pattern-pos-label {
-    font-size: 0.75em; font-weight: bold; color: #aac;
-    letter-spacing: 0.5px; min-width: 38px; text-align: center;
+    font-size: 0.78em; font-weight: bold; color: #7ecef4;
+    letter-spacing: 0.5px; min-width: 46px; text-align: center;
   }
   .pattern-arrow { font-size: 0.9em; color: #4a6a9f; margin-top: 10px; align-self: center; }
 
@@ -222,6 +228,7 @@
   .key-btn:hover { filter: brightness(1.3); border-color: #7ecef4; }
   .key-btn.active { color: #fff; border-color: rgba(255,255,255,0.5);
     box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
 
   /* ── Metronome ── */
   .metro-bar {
@@ -291,6 +298,8 @@
     <button class="focus-btn" id="focus-btn">🎯 Focus Frets 1–5: Off</button>
   </div>
 </div>
+
+
 
 <!-- Metronome -->
 <div class="metro-bar">
@@ -707,7 +716,8 @@ CHROMATIC.forEach(note => {
   legendEl.appendChild(item);
 });
 
-// ── Scale helpers ────────────────────────────────────────────────────────────
+
+// ── Scale helpers ─────────────────────────────────────────────────────────────
 function getScaleNotes(root, scaleName) {
   const ivs = SCALES[scaleName];
   if (!ivs) return null;
@@ -715,562 +725,347 @@ function getScaleNotes(root, scaleName) {
   return new Set(ivs.map(i => CHROMATIC[(ri + i) % 12]));
 }
 
-// ── Fretboard update ─────────────────────────────────────────────────────────
-function updateFretboard() {
-  const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
-  document.querySelectorAll('.note-circle').forEach(circle => {
-    const td        = circle.closest('td');
-    const note      = td.dataset.note;
-    const fret      = +td.dataset.fret;
-    const strName   = td.dataset.string;
-    const inScale   = !scaleNotes || scaleNotes.has(note);
-    const isRoot    = note === selectedRoot && selectedScale !== 'All Notes';
-    const focusLim  = strName === 'G' ? 8 : 4;
-    const outOfFocus = focusMode && fret > focusLim;
-    const isDimmed  = !inScale || outOfFocus;
-
-    if (outOfFocus) {
-      circle.style.background = '#3a3a4a';
-      circle.style.opacity    = '0.18';
-      circle.style.boxShadow  = 'none';
-      circle.style.color      = 'transparent';
-    } else if (!inScale) {
-      circle.style.background = '#666';
-      circle.style.opacity    = '0.35';
-      circle.style.boxShadow  = 'none';
-      circle.style.color      = '#555';
-    } else {
-      circle.style.background = NOTE_COLORS[note];
-      circle.style.opacity    = '1';
-      circle.style.color      = '#fff';
-      circle.style.boxShadow  = isRoot
-        ? '0 0 0 3px #fff, 0 0 0 5px rgba(255,255,255,0.35)'
-        : '0 2px 4px rgba(0,0,0,0.3)';
+function getPatternNotes(root, scaleName) {
+  const scaleNotes = getScaleNotes(root, scaleName);
+  if (!scaleNotes) return null;
+  const result = [];
+  STRINGS.forEach(str => {
+    const strNotes = [];
+    for (let f = 0; f <= PATTERN_MAX; f++) {
+      const noteIdx  = (str.openIdx + f) % 12;
+      const noteName = CHROMATIC[noteIdx];
+      if (scaleNotes.has(noteName)) {
+        strNotes.push({ note: noteName, fret: f, midi: str.openMidi + f });
+      }
     }
-    circle.classList.toggle('dimmed',  isDimmed);
-    circle.classList.toggle('is-root', inScale && isRoot && !outOfFocus);
+    if (strNotes.length) result.push({ string: str.name, notes: strNotes });
   });
-
-  const statusEl = document.getElementById('status');
-  if (selectedScale === 'All Notes') {
-    statusEl.textContent = 'Showing all 12 chromatic notes';
-  } else {
-    const list = [...getScaleNotes(selectedRoot, selectedScale)].join('  ·  ');
-    statusEl.textContent =
-      `${selectedRoot} ${selectedScale}  (${SCALES[selectedScale].length} notes)   →   ${list}`;
-  }
+  return result;
 }
 
-// ── Pattern display ──────────────────────────────────────────────────────────
-function updatePattern() {
-  const patEl      = document.getElementById('pattern-display');
+// ── Fretboard update ──────────────────────────────────────────────────────────
+function updateAll() {
   const scaleNotes = getScaleNotes(selectedRoot, selectedScale);
+  const isAllNotes = (selectedScale === 'All Notes');
+  const statusEl   = document.getElementById('status');
 
-  if (!scaleNotes) {
-    patEl.innerHTML = '<p class="pattern-empty">Select a scale above to see the fingering pattern</p>';
-    document.getElementById('pattern-heading').textContent =
-      '📋 Scale Pattern — open position (frets 0 – 7)';
+  document.querySelectorAll('.note-cell').forEach(td => {
+    const noteName = td.dataset.note;
+    const fret     = parseInt(td.dataset.fret);
+    const circle   = td.querySelector('.note-circle');
+    const inScale  = isAllNotes || (scaleNotes && scaleNotes.has(noteName));
+
+    if (focusMode && fret > 5) {
+      circle.className = 'note-circle dimmed';
+    } else if (inScale) {
+      circle.className = 'note-circle' + (noteName === selectedRoot ? ' is-root' : '');
+      circle.style.background = NOTE_COLORS[noteName];
+    } else {
+      circle.className = 'note-circle dimmed';
+    }
+  });
+
+  if (isAllNotes) {
+    statusEl.textContent = 'Showing all 12 chromatic notes';
+  } else {
+    const notes = getScaleNotes(selectedRoot, selectedScale);
+    statusEl.textContent = selectedRoot + ' ' + selectedScale + ': ' + [...notes].join(' – ');
+  }
+
+  buildPatternDisplay();
+}
+
+// ── Scale pattern display ─────────────────────────────────────────────────────
+function buildPatternDisplay() {
+  const container = document.getElementById('pattern-display');
+  const heading   = document.getElementById('pattern-heading');
+  container.innerHTML = '';
+
+  if (selectedScale === 'All Notes') {
+    container.innerHTML = '<p class="pattern-empty">Select a specific scale to see the fingering pattern</p>';
+    heading.textContent = 'Scale Pattern — open position (frets 0 – 7)';
     return;
   }
 
-  const maxFret = focusMode ? 4 : PATTERN_MAX;
-  document.getElementById('pattern-heading').textContent = focusMode
-    ? '📋 Scale Pattern — focus position (frets 1–5, G string to fret 8)'
-    : '📋 Scale Pattern — open position (frets 0 – 7)';
+  const patternData = getPatternNotes(selectedRoot, selectedScale);
+  heading.textContent = selectedRoot + ' ' + selectedScale + ' — open position (frets 0 – 7)';
 
-  let rowsHtml = '';
-  STRINGS.forEach(str => {
-    const strMax = (focusMode && str.name === 'G') ? 8 : maxFret;
-    const cells  = [];
-    for (let f = 0; f <= strMax; f++) {
-      const noteName = CHROMATIC[(str.openIdx + f) % 12];
-      if (scaleNotes.has(noteName)) {
-        cells.push({
-          noteName, fret: f,
-          midi:     str.openMidi + f,
-          posLabel: `${str.name}${f + 1}`,
-          isRoot:   noteName === selectedRoot
+  if (!patternData || patternData.length === 0) {
+    container.innerHTML = '<p class="pattern-empty">No notes in this pattern range</p>';
+    return;
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'pattern-strings';
+
+  patternData.forEach(function(row) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'pattern-row';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'pattern-str-label';
+    lbl.textContent = row.string;
+    rowEl.appendChild(lbl);
+
+    const cells = document.createElement('div');
+    cells.className = 'pattern-cells';
+
+    row.notes.forEach(function(n) {
+      const cell = document.createElement('div');
+      cell.className = 'pattern-cell';
+
+      const badge = document.createElement('div');
+      badge.className = 'pattern-note-badge' + (n.note === selectedRoot ? ' root-badge' : '');
+      badge.style.background = NOTE_COLORS[n.note];
+      badge.textContent = n.note;
+      badge.dataset.midi   = n.midi;
+      badge.dataset.note   = n.note;
+      badge.dataset.string = row.string;
+      badge.dataset.fret   = n.fret;
+
+      badge.addEventListener('click', function() {
+        badge.classList.remove('playing'); void badge.offsetWidth; badge.classList.add('playing');
+        badge.addEventListener('animationend', function() { badge.classList.remove('playing'); }, {once:true});
+        crossPulsePattern(n.note);
+        // Pulse the matching fretboard circle(s) for this exact MIDI note
+        document.querySelectorAll('.note-cell').forEach(function(td) {
+          if (parseInt(td.dataset.midi) === n.midi) {
+            var c = td.querySelector('.note-circle');
+            c.classList.remove('playing'); void c.offsetWidth; c.classList.add('playing');
+            c.addEventListener('animationend', function() { c.classList.remove('playing'); }, {once:true});
+          }
         });
-      }
-    }
-    if (!cells.length) return;
+        playBassNote(n.midi, n.note, row.string, n.fret);
+      });
+      badge.addEventListener('mouseenter', function() { highlightInPattern(n.note); });
+      badge.addEventListener('mouseleave', clearPatternHighlight);
 
-    let cellsHtml = '';
-    cells.forEach((c, i) => {
-      const rootCls = c.isRoot ? ' root-badge' : '';
-      cellsHtml += `
-        <div class="pattern-cell">
-          <div class="pattern-note-badge${rootCls}"
-               style="background:${NOTE_COLORS[c.noteName]}"
-               data-midi="${c.midi}" data-note="${c.noteName}"
-               data-string="${str.name}" data-fret="${c.fret}"
-               onclick="patternPlay(this)">${c.noteName}</div>
-          <div class="pattern-pos-label">${c.posLabel}</div>
-        </div>`;
-      if (i < cells.length - 1) cellsHtml += '<div class="pattern-arrow">→</div>';
+      const posLbl = document.createElement('div');
+      posLbl.className = 'pattern-pos-label';
+      posLbl.textContent = row.string + (n.fret + 1);
+
+      cell.appendChild(badge);
+      cell.appendChild(posLbl);
+      cells.appendChild(cell);
     });
 
-    rowsHtml += `
-      <div class="pattern-row">
-        <div class="pattern-str-label">${str.name}</div>
-        <div class="pattern-cells">${cellsHtml}</div>
-      </div>`;
+    rowEl.appendChild(cells);
+    wrapper.appendChild(rowEl);
   });
 
-  patEl.innerHTML = `<div class="pattern-strings">${rowsHtml}</div>`;
+  container.appendChild(wrapper);
 }
 
-// ── Pattern play (global — called from inline onclick) ───────────────────────
-function patternPlay(el) {
-  const midi = +el.dataset.midi;
-  const note = el.dataset.note;
-  const str  = el.dataset.string;
-  const fret = +el.dataset.fret;
-  el.classList.remove('playing');
-  void el.offsetWidth;
-  el.classList.add('playing');
-  el.addEventListener('animationend', () => el.classList.remove('playing'), {once:true});
-  crossPulseFretboard(note);
-  drawStaff(midi, note);
-  playBassNote(midi, note, str, fret);
-}
-
-// ── Pattern hover → fretboard highlight ─────────────────────────────────────
-document.getElementById('pattern-display').addEventListener('mouseover', e => {
-  const badge = e.target.closest('.pattern-note-badge');
-  if (badge) { clearFretboardHighlight(); highlightOnFretboard(badge.dataset.note); }
-});
-document.getElementById('pattern-display').addEventListener('mouseout', e => {
-  if (e.target.closest('.pattern-note-badge')) clearFretboardHighlight();
-});
-
-// ── Cross-highlight & pulse helpers ─────────────────────────────────────────
-function highlightInPattern(noteName) {
-  document.querySelectorAll('.pattern-note-badge').forEach(b => {
-    if (b.dataset.note === noteName) b.classList.add('highlighted');
-  });
-}
-function clearPatternHighlight() {
-  document.querySelectorAll('.pattern-note-badge').forEach(b => b.classList.remove('highlighted'));
-}
-function highlightOnFretboard(noteName) {
-  document.querySelectorAll('.note-circle').forEach(c => {
-    if (c.closest('td').dataset.note === noteName && !c.classList.contains('dimmed'))
-      c.classList.add('highlighted');
-  });
-}
-function clearFretboardHighlight() {
-  document.querySelectorAll('.note-circle').forEach(c => c.classList.remove('highlighted'));
-}
-function crossPulseEl(el) {
-  el.style.animation = 'none';
-  void el.offsetHeight;
-  el.style.animation = 'crossPulse 0.55s ease-out';
-  setTimeout(() => { el.style.animation = ''; }, 600);
-}
+// ── Pattern pulse helpers ─────────────────────────────────────────────────────
 function crossPulsePattern(noteName) {
-  // Used by manual fretboard/pattern clicks — pulses all badges of that note name
-  document.querySelectorAll('.pattern-note-badge').forEach(b => {
-    if (b.dataset.note === noteName) crossPulseEl(b);
+  // Pulse all matching pattern badges
+  document.querySelectorAll('.pattern-note-badge').forEach(function(b) {
+    if (b.dataset.note === noteName) {
+      b.classList.remove('playing'); void b.offsetWidth; b.classList.add('playing');
+      b.addEventListener('animationend', function() { b.classList.remove('playing'); }, {once:true});
+    }
+  });
+  // Pulse all matching fretboard circles
+  document.querySelectorAll('.note-cell').forEach(function(td) {
+    if (td.dataset.note === noteName) {
+      var c = td.querySelector('.note-circle');
+      if (c && !c.classList.contains('dimmed')) {
+        c.classList.remove('playing'); void c.offsetWidth; c.classList.add('playing');
+        c.addEventListener('animationend', function() { c.classList.remove('playing'); }, {once:true});
+      }
+    }
   });
 }
+
 function crossPulsePatternByMidi(midi) {
-  // Used by song player — pulses only the exact note at that MIDI value
-  document.querySelectorAll('.pattern-note-badge').forEach(b => {
-    if (+b.dataset.midi === midi) crossPulseEl(b);
+  document.querySelectorAll('.pattern-note-badge').forEach(function(b) {
+    if (parseInt(b.dataset.midi) === midi) {
+      b.classList.remove('playing'); void b.offsetWidth; b.classList.add('playing');
+      b.addEventListener('animationend', function() { b.classList.remove('playing'); }, {once:true});
+    }
   });
-}
-function crossPulseFretboard(noteName) {
-  document.querySelectorAll('.note-circle').forEach(c => {
-    const td = c.closest('td');
-    if (td && td.dataset.note === noteName && !c.classList.contains('dimmed'))
-      crossPulseEl(c);
+  document.querySelectorAll('.note-cell').forEach(function(td) {
+    if (parseInt(td.dataset.midi) === midi) {
+      var circle = td.querySelector('.note-circle');
+      if (!circle.classList.contains('dimmed')) {
+        circle.classList.remove('song-pulse'); void circle.offsetWidth; circle.classList.add('song-pulse');
+        circle.addEventListener('animationend', function() { circle.classList.remove('song-pulse'); }, {once:true});
+      }
+    }
   });
 }
 
-// ── Main update ──────────────────────────────────────────────────────────────
-function updateAll() {
-  updateFretboard();
-  updatePattern();
+function highlightInPattern(noteName) {
+  document.querySelectorAll('.pattern-note-badge').forEach(function(b) {
+    b.style.opacity = b.dataset.note === noteName ? '1' : '0.4';
+  });
 }
 
-// ── Song data ────────────────────────────────────────────────────────────────
-// Each note: { midi, name, str, fret, dur }  dur = beats (quarter=1.0)
-// str = string name ('E','A','D','G'), null midi = rest
-const SONGS = {
-  // ── Seven Nation Army ─────────────────────────────────────────────────────
-  // A string: 7-7-10-7-5-3-2  (E2 E2 G2 E2 D2 C2 B1)
-  // Key fix: last note is B natural (not Bb), dotted-quarter feel on opening E
+function clearPatternHighlight() {
+  document.querySelectorAll('.pattern-note-badge').forEach(function(b) { b.style.opacity = ''; });
+}
+
+// ── Song data ─────────────────────────────────────────────────────────────────
+var SONGS = {
   seven_nation_army: {
-    title: 'Seven Nation Army', artist: 'The White Stripes', bpm: 124, tonic: 'E',
-    notes: [
-      {midi:40,name:'E2',str:'A',fret:7,  dur:1.5}, // dotted quarter
-      {midi:40,name:'E2',str:'A',fret:7,  dur:0.5},
-      {midi:43,name:'G2',str:'A',fret:10, dur:0.5},
-      {midi:40,name:'E2',str:'A',fret:7,  dur:1.0},
-      {midi:38,name:'D2',str:'A',fret:5,  dur:1.0}, // A string fret 5 — same string as the whole riff
-      {midi:36,name:'C2',str:'A',fret:3,  dur:1.0},
-      {midi:35,name:'B1',str:'A',fret:2,  dur:2.0}, // B natural, NOT Bb
-      {midi:40,name:'E2',str:'A',fret:7,  dur:1.5},
-      {midi:40,name:'E2',str:'A',fret:7,  dur:0.5},
-      {midi:43,name:'G2',str:'A',fret:10, dur:0.5},
-      {midi:40,name:'E2',str:'A',fret:7,  dur:1.0},
-      {midi:38,name:'D2',str:'A',fret:5,  dur:1.0},
-      {midi:36,name:'C2',str:'A',fret:3,  dur:1.0},
-      {midi:35,name:'B1',str:'A',fret:2,  dur:2.0},
+    title:'Seven Nation Army', artist:'The White Stripes', bpm:124, tonic:'E', gate:0.6,
+    notes:[
+      {midi:40,name:'E2',dur:1.0},{midi:40,name:'E2',dur:0.5},{midi:47,name:'B2',dur:0.5},
+      {midi:40,name:'E2',dur:0.5},{midi:47,name:'B2',dur:0.5},{midi:45,name:'A2',dur:0.5},
+      {midi:43,name:'G2',dur:0.5},{midi:40,name:'E2',dur:0.5},{midi:43,name:'G2',dur:0.5},
+      {midi:45,name:'A2',dur:0.5},{midi:40,name:'E2',dur:0.5},{midi:47,name:'B2',dur:0.5},
+      {midi:40,name:'E2',dur:0.5},{midi:47,name:'B2',dur:0.5},{midi:45,name:'A2',dur:0.5},
+      {midi:43,name:'G2',dur:1.5}
     ]
   },
-
-  // ── Another One Bites the Dust ────────────────────────────────────────────
-  // E string open (0) driving pattern, then G(3) A(5) flourish
-  // Rhythm: three quick E hits, gap, then G-A answer phrase
   another_one: {
-    title: 'Another One Bites the Dust', artist: 'Queen', bpm: 110, tonic: 'E',
-    notes: [
-      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
-      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
-      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
-      {midi:null,name:'',str:'',fret:0,  dur:0.25},
-      {midi:31,name:'G1',str:'E',fret:3, dur:0.25},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.75},
-      {midi:null,name:'',str:'',fret:0,  dur:0.75},
-      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
-      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
-      {midi:28,name:'E1',str:'E',fret:0, dur:0.5},
-      {midi:null,name:'',str:'',fret:0,  dur:0.25},
-      {midi:31,name:'G1',str:'E',fret:3, dur:0.25},
-      {midi:34,name:'Bb1',str:'A',fret:1,dur:0.5}, // Bb passing note
-      {midi:33,name:'A1',str:'A',fret:0, dur:1.5},
+    title:'Another One Bites the Dust', artist:'Queen', bpm:110, tonic:'E', gate:0.5,
+    notes:[
+      {midi:40,name:'E2',dur:0.5},{midi:null,name:'',dur:0.25},{midi:40,name:'E2',dur:0.25},
+      {midi:null,name:'',dur:0.25},{midi:40,name:'E2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:40,name:'E2',dur:0.25},{midi:43,name:'G2',dur:0.25},{midi:45,name:'A2',dur:0.25},
+      {midi:null,name:'',dur:0.25},{midi:45,name:'A2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:45,name:'A2',dur:0.25},{midi:null,name:'',dur:0.25},{midi:45,name:'A2',dur:0.25},
+      {midi:48,name:'C3',dur:0.25},{midi:50,name:'D3',dur:0.5},{midi:null,name:'',dur:0.5},
+      {midi:40,name:'E2',dur:0.5},{midi:null,name:'',dur:0.25},{midi:40,name:'E2',dur:0.25},
+      {midi:null,name:'',dur:0.25},{midi:40,name:'E2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:40,name:'E2',dur:0.25},{midi:43,name:'G2',dur:0.25},{midi:45,name:'A2',dur:0.25},
+      {midi:null,name:'',dur:0.25},{midi:45,name:'A2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:45,name:'A2',dur:0.25},{midi:null,name:'',dur:0.25},{midi:45,name:'A2',dur:0.25},
+      {midi:48,name:'C3',dur:0.25},{midi:50,name:'D3',dur:1.0}
     ]
   },
-
-  // ── Smoke on the Water ────────────────────────────────────────────────────
-  // Classic triplet-feel riff: G-Bb-C | G-Bb-Db-C | G-Bb-C-Bb-G
-  // Classic tab: ALL on E string — frets 3-6-8 | 3-6-9-8 | 3-6-8-6-3
   smoke_water: {
-    title: 'Smoke on the Water', artist: 'Deep Purple', bpm: 108, tonic: 'G',
-    notes: [
-      {midi:31,name:'G1', str:'E',fret:3, dur:0.67},
-      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.67}, // E fret 6
-      {midi:36,name:'C2', str:'E',fret:8, dur:0.67}, // E fret 8
-      {midi:null,name:'', str:'',fret:0,  dur:1.0 },
-      {midi:31,name:'G1', str:'E',fret:3, dur:0.67},
-      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.67},
-      {midi:37,name:'Db2',str:'E',fret:9, dur:0.5 }, // E fret 9
-      {midi:36,name:'C2', str:'E',fret:8, dur:0.67},
-      {midi:null,name:'', str:'',fret:0,  dur:0.67},
-      {midi:31,name:'G1', str:'E',fret:3, dur:0.67},
-      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.67},
-      {midi:36,name:'C2', str:'E',fret:8, dur:0.5 },
-      {midi:34,name:'Bb1',str:'E',fret:6, dur:0.33},
-      {midi:31,name:'G1', str:'E',fret:3, dur:1.5 },
+    title:'Smoke on the Water', artist:'Deep Purple', bpm:112, tonic:'G', gate:0.65,
+    notes:[
+      {midi:43,name:'G2',dur:0.5},{midi:46,name:'A#2',dur:0.5},{midi:48,name:'C3',dur:1.0},
+      {midi:43,name:'G2',dur:0.5},{midi:46,name:'A#2',dur:0.5},{midi:51,name:'D#3',dur:0.5},{midi:50,name:'D3',dur:1.0},
+      {midi:43,name:'G2',dur:0.5},{midi:46,name:'A#2',dur:0.5},{midi:48,name:'C3',dur:0.5},
+      {midi:46,name:'A#2',dur:0.5},{midi:43,name:'G2',dur:2.0},
+      {midi:43,name:'G2',dur:0.5},{midi:46,name:'A#2',dur:0.5},{midi:48,name:'C3',dur:1.0},
+      {midi:43,name:'G2',dur:0.5},{midi:46,name:'A#2',dur:0.5},{midi:51,name:'D#3',dur:0.5},{midi:50,name:'D3',dur:1.0},
+      {midi:43,name:'G2',dur:0.5},{midi:46,name:'A#2',dur:0.5},{midi:48,name:'C3',dur:0.5},
+      {midi:46,name:'A#2',dur:0.5},{midi:43,name:'G2',dur:2.0}
     ]
   },
-
-  // ── Come Together ─────────────────────────────────────────────────────────
-  // Paul McCartney's swampy D-based riff
-  // Driving repeated D with chromatic walk A-G at the end
   come_together: {
-    title: 'Come Together', artist: 'The Beatles', bpm: 84, tonic: 'D',
-    notes: [
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5 },
-      {midi:31,name:'G1',str:'E',fret:3, dur:1.5 },
-      {midi:null,name:'',str:'',fret:0,  dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5 },
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5 },
-      {midi:31,name:'G1',str:'E',fret:3, dur:2.0 },
+    title:'Come Together', artist:'The Beatles', bpm:82, tonic:'D', gate:0.55,
+    notes:[
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:null,name:'',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:null,name:'',dur:1.0},
+      {midi:45,name:'A2',dur:0.5},{midi:43,name:'G2',dur:1.5},
+      {midi:null,name:'',dur:2.0},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:null,name:'',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:null,name:'',dur:1.0},
+      {midi:45,name:'A2',dur:0.5},{midi:43,name:'G2',dur:1.5},
+      {midi:null,name:'',dur:2.0},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:null,name:'',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:null,name:'',dur:1.0},
+      {midi:45,name:'A2',dur:0.5},{midi:43,name:'G2',dur:1.5},
+      {midi:null,name:'',dur:1.0}
     ]
   },
-
-  // ── Should I Stay or Should I Go ─────────────────────────────────────────
-  // The Clash (1982) — Paul Simonon, key of D, ~113 BPM
-  // Verse riff: pumping D2 8ths → jump to G2 → back down A1-D2
-  // Chorus: D-G-D-G-A-D progression, full first verse + chorus
-  should_i_stay: {
-    title: 'Should I Stay or Should I Go', artist: 'The Clash', bpm: 113, tonic: 'D',
-    notes: [
-      // ── VERSE ── "Darling you got to let me know..." (4 × 2-bar riff)
-      // Riff 1 ── "Darling you got to let me know"
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      // Riff 2 ── "Should I stay or should I go?"
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      // Riff 3 ── "If I go, there will be trouble"
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.25},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.25},
-      // Riff 4 ── "An' if I stay it will be double" → builds to chorus
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      // ── CHORUS ── "Should I stay or should I go now..." (4 phrases)
-      // Phrase 1 ── "Should I stay or should I go now?"
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:1.0},
-      // Phrase 2 ── "Should I stay or should I go now?"
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:1.0},
-      // Phrase 3 ── "If I go there will be trouble"
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:1.0},
-      // Phrase 4 ── "So you gotta let me know" — big finish on D
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:0.5},
-      {midi:43,name:'G2',str:'D',fret:5, dur:0.5},
-      {midi:33,name:'A1',str:'A',fret:0, dur:0.5},
-      {midi:38,name:'D2',str:'D',fret:0, dur:2.0},
-    ]
-  },
-
-  // ── Billie Jean ───────────────────────────────────────────────────────────
-  // Louis Johnson's F# minor groove — played on D string, mid register
-  // F#2=D4, A2=D7, B2=D9  (one octave higher than before — much clearer tone)
   billie_jean: {
-    title: 'Billie Jean', artist: 'Michael Jackson', bpm: 117, tonic: 'F#',
-    notes: [
-      {midi:42,name:'F#2',str:'D',fret:4, dur:0.5 },
-      {midi:45,name:'A2', str:'D',fret:7, dur:0.5 },
-      {midi:47,name:'B2', str:'D',fret:9, dur:0.5 },
-      {midi:45,name:'A2', str:'D',fret:7, dur:0.25},
-      {midi:42,name:'F#2',str:'D',fret:4, dur:0.25},
-      {midi:null,name:'', str:'',fret:0,  dur:0.5 },
-      {midi:45,name:'A2', str:'D',fret:7, dur:0.5 },
-      {midi:47,name:'B2', str:'D',fret:9, dur:0.5 },
-      {midi:42,name:'F#2',str:'D',fret:4, dur:0.5 },
-      {midi:45,name:'A2', str:'D',fret:7, dur:0.5 },
-      {midi:47,name:'B2', str:'D',fret:9, dur:0.5 },
-      {midi:45,name:'A2', str:'D',fret:7, dur:0.25},
-      {midi:42,name:'F#2',str:'D',fret:4, dur:0.25},
-      {midi:null,name:'', str:'',fret:0,  dur:0.25},
-      {midi:40,name:'E2', str:'D',fret:2, dur:0.25},
-      {midi:42,name:'F#2',str:'D',fret:4, dur:1.5 },
+    title:'Billie Jean', artist:'Michael Jackson', bpm:117, tonic:'F#', gate:0.6,
+    notes:[
+      {midi:42,name:'F#2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:49,name:'C#3',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:49,name:'C#3',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:45,name:'A2',dur:0.25},{midi:45,name:'A2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:45,name:'A2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.5},
+      {midi:42,name:'F#2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:42,name:'F#2',dur:0.25},{midi:49,name:'C#3',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:49,name:'C#3',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:45,name:'A2',dur:0.25},{midi:45,name:'A2',dur:0.25},{midi:null,name:'',dur:0.25},
+      {midi:45,name:'A2',dur:0.25},{midi:42,name:'F#2',dur:0.25},{midi:null,name:'',dur:0.5}
+    ]
+  },
+  should_i_stay: {
+    title:'Should I Stay or Should I Go', artist:'The Clash', bpm:113, tonic:'D', gate:0.7,
+    notes:[
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:31,name:'G1',dur:0.5},{midi:31,name:'G1',dur:0.5},
+      {midi:35,name:'B1',dur:0.5},{midi:36,name:'C2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:31,name:'G1',dur:0.5},{midi:31,name:'G1',dur:0.5},
+      {midi:35,name:'B1',dur:0.5},{midi:36,name:'C2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:31,name:'G1',dur:0.5},{midi:31,name:'G1',dur:0.5},
+      {midi:35,name:'B1',dur:0.5},{midi:36,name:'C2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:38,name:'D2',dur:0.5},{midi:38,name:'D2',dur:0.5},
+      {midi:31,name:'G1',dur:0.5},{midi:31,name:'G1',dur:0.5},
+      {midi:35,name:'B1',dur:0.5},{midi:36,name:'C2',dur:0.5},
+      {midi:38,name:'D2',dur:0.25},{midi:38,name:'D2',dur:0.25},
+      {midi:38,name:'D2',dur:0.25},{midi:38,name:'D2',dur:0.25},
+      {midi:31,name:'G1',dur:0.25},{midi:31,name:'G1',dur:0.25},
+      {midi:35,name:'B1',dur:0.25},{midi:36,name:'C2',dur:0.25},
+      {midi:38,name:'D2',dur:0.25},{midi:38,name:'D2',dur:0.25},
+      {midi:38,name:'D2',dur:0.25},{midi:38,name:'D2',dur:0.25},
+      {midi:31,name:'G1',dur:0.25},{midi:31,name:'G1',dur:0.25},
+      {midi:35,name:'B1',dur:0.25},{midi:36,name:'C2',dur:0.25}
     ]
   }
 };
 
-// ── Song sequencer ────────────────────────────────────────────────────────────
-let songPlaying  = false;
-let songTimers   = [];
-let songTranspose = 0;  // semitone offset from original key
-let songOctave   = 0;   // 0 = normal, 12 = one octave higher
+var songPlaying    = false;
+var songNoteTimers = [];
+var songTranspose  = 0;
+var songOctave     = 0;
+var songOctaveOn   = false;
+var currentSongKey = null;
 
-document.getElementById('octave-btn').addEventListener('click', () => {
-  if (songPlaying) stopSong();
-  songOctave = songOctave === 0 ? 12 : 0;
-  const btn = document.getElementById('octave-btn');
-  btn.classList.toggle('active', songOctave === 12);
-  btn.textContent = songOctave === 12 ? '🔼 +8va ON' : '🔼 +8va';
-});
-
-// ── Key buttons ──────────────────────────────────────────────────────────────
-function buildKeyButtons(song) {
-  const group  = document.getElementById('song-key-group');
-  const keyRow = document.getElementById('song-key-row');
-  group.innerHTML = '';
-  keyRow.style.display = 'flex';
-  const tonicIdx = CHROMATIC.indexOf(song.tonic);
-
-  CHROMATIC.forEach((note, ni) => {
-    const btn = document.createElement('button');
-    btn.textContent = note;
-    btn.className = 'key-btn' + (note === song.tonic ? ' active' : '');
-    if (note === song.tonic) btn.style.background = NOTE_COLORS[note];
-    btn.addEventListener('click', () => {
-      if (songPlaying) stopSong();
-      // shortest-path semitone offset
-      let diff = ni - tonicIdx;
-      if (diff > 6) diff -= 12;
-      if (diff < -6) diff += 12;
-      songTranspose = diff;
-      group.querySelectorAll('.key-btn').forEach(b => {
-        b.classList.toggle('active', b.textContent === note);
-        b.style.background = b.textContent === note ? NOTE_COLORS[note] : '';
-      });
-    });
-    group.appendChild(btn);
-  });
-}
-
-document.getElementById('song-select').addEventListener('change', function() {
-  if (songPlaying) stopSong();
-  songTranspose = 0;
-  const key = this.value;
-  if (key) {
-    buildKeyButtons(SONGS[key]);
-  } else {
-    document.getElementById('song-key-row').style.display = 'none';
-  }
-});
-
-document.getElementById('tempo-slider').addEventListener('input', function() {
-  document.getElementById('tempo-display').textContent = this.value + '%';
-});
-
-document.getElementById('song-play-btn').addEventListener('click', () => {
-  if (songPlaying) { stopSong(); return; }
-  const key  = document.getElementById('song-select').value;
-  if (!key) return;
-  playSong(SONGS[key]);
-});
-
-function stopSong() {
-  songPlaying = false;
-  songTimers.forEach(t => clearTimeout(t));
-  songTimers = [];
-  document.querySelectorAll('.note-circle.song-highlight')
-    .forEach(c => c.classList.remove('song-highlight'));
-  const btn = document.getElementById('song-play-btn');
-  btn.textContent = '▶ Play';
-  btn.classList.remove('playing');
-}
-
-function playSong(song) {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-
-  songPlaying = true;
-  const btn = document.getElementById('song-play-btn');
-  btn.textContent = '■ Stop';
-  btn.classList.add('playing');
-
-  const speedPct  = +document.getElementById('tempo-slider').value / 100;
-  const beatSecs  = (60 / song.bpm) / speedPct;
-  const now       = audioCtx.currentTime + 0.05;
-  let   offset    = 0;
-
-  song.notes.forEach(note => {
-    const when    = now + offset;
-    const noteDur = note.dur * beatSecs;
-
-    if (note.midi !== null) {
-      const tMidi = note.midi + songTranspose + songOctave; // transposed + octave shift
-      const tName = CHROMATIC[((tMidi % 12) + 12) % 12];  // transposed note name
-
-      // ── Schedule audio ──
-      scheduleSongNote(tMidi, when, noteDur * 0.82);
-
-      // ── Schedule visuals ──
-      const ms = offset * 1000;
-      songTimers.push(setTimeout(() => {
-        if (!songPlaying) return;
-        drawStaff(tMidi, tName);
-        // Fretboard highlight — find cell by transposed MIDI value
-        const td = document.querySelector(`td[data-midi="${tMidi}"]`);
-        if (td) {
-          const circle = td.querySelector('.note-circle');
-          if (circle) {
-            document.querySelectorAll('.note-circle.song-highlight')
-              .forEach(c => c.classList.remove('song-highlight'));
-            circle.classList.add('song-highlight');
-            circle.style.animation = 'none';
-            void circle.offsetHeight;
-            circle.style.animation = 'songPulse 0.4s ease-out';
-            setTimeout(() => { circle.style.animation = ''; }, 450);
-          }
-        }
-        // Scale pattern pulse — exact MIDI match only, not all notes of that name
-        crossPulsePatternByMidi(tMidi);
-        // Now-playing display
-        const fretInfo = td ? `${td.dataset.string} string fret ${td.dataset.fret}` : '—';
-        const hz = midiToHz(tMidi).toFixed(1);
-        document.getElementById('now-playing').innerHTML =
-          `🎵 <span>${tName}</span> &nbsp;·&nbsp; ${fretInfo} &nbsp;·&nbsp; ${hz} Hz`;
-      }, ms));
-    }
-    offset += noteDur;
-  });
-
-  // End of song
-  songTimers.push(setTimeout(() => {
-    stopSong();
-    document.getElementById('now-playing').textContent = '✅ Finished — click Play again';
-  }, offset * 1000 + 100));
-}
+function hzToMidi(hz) { return Math.round(69 + 12 * Math.log2(hz / 440)); }
 
 function scheduleSongNote(midi, when, duration) {
-  const hz  = midiToHz(midi);
-  const vol = document.getElementById('vol-slider').value / 100;
+  if (!audioCtx) return;
+  var hz   = midiToHz(midi);
+  var vol  = document.getElementById('vol-slider').value / 100;
+  var osc1   = audioCtx.createOscillator();
+  var osc2   = audioCtx.createOscillator();
+  var sub    = audioCtx.createGain();
+  var filter = audioCtx.createBiquadFilter();
+  var gain   = audioCtx.createGain();
+  var comp   = audioCtx.createDynamicsCompressor();
 
-  const osc1   = audioCtx.createOscillator();
-  const osc2   = audioCtx.createOscillator();
-  const blend  = audioCtx.createGain();
-  const filter = audioCtx.createBiquadFilter();
-  const gain   = audioCtx.createGain();
-  const comp   = audioCtx.createDynamicsCompressor();
-
-  osc1.type = 'triangle';
+  osc1.type = 'sawtooth';
   osc1.frequency.setValueAtTime(hz, when);
-  osc2.type = 'sawtooth';
+  osc2.type = 'sine';
   osc2.frequency.setValueAtTime(hz * 0.5, when);
-  blend.gain.setValueAtTime(0.22, when);
+  sub.gain.setValueAtTime(0.45, when);
 
   filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(2800, when);
-  filter.frequency.exponentialRampToValueAtTime(320, when + 0.25);
-  filter.Q.value = 1.8;
+  filter.frequency.setValueAtTime(3500, when);
+  filter.frequency.exponentialRampToValueAtTime(600, when + 0.08);
+  filter.frequency.exponentialRampToValueAtTime(280, when + 0.35);
+  filter.Q.value = 2.2;
 
   gain.gain.setValueAtTime(0.001, when);
-  gain.gain.exponentialRampToValueAtTime(vol * 0.85, when + 0.008);
-  gain.gain.exponentialRampToValueAtTime(vol * 0.45, when + 0.12);
-  gain.gain.exponentialRampToValueAtTime(vol * 0.30, when + duration * 0.6);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.95, when + 0.005);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.55, when + 0.08);
+  gain.gain.exponentialRampToValueAtTime(vol * 0.35, when + duration * 0.5);
   gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
 
-  comp.threshold.value = -18; comp.knee.value = 8;
-  comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.15;
+  comp.threshold.value = -14; comp.knee.value = 6;
+  comp.ratio.value = 6; comp.attack.value = 0.002; comp.release.value = 0.1;
 
-  osc2.connect(blend); blend.connect(filter);
+  osc2.connect(sub); sub.connect(filter);
   osc1.connect(filter); filter.connect(gain);
   gain.connect(comp); comp.connect(audioCtx.destination);
 
@@ -1278,97 +1073,209 @@ function scheduleSongNote(midi, when, duration) {
   osc1.stop(when + duration + 0.05); osc2.stop(when + duration + 0.05);
 }
 
-updateAll();
-drawStaff(null, null);
+function buildKeyButtons(song) {
+  var row = document.getElementById('song-key-row');
+  var grp = document.getElementById('song-key-group');
+  grp.innerHTML = '';
+  if (!song) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  var tonic    = song.tonic || 'E';
+  var tonicIdx = CHROMATIC.indexOf(tonic);
+  CHROMATIC.forEach(function(note, idx) {
+    var semis = (idx - tonicIdx + 12) % 12;
+    var btn   = document.createElement('button');
+    btn.className = 'key-btn' + (semis === 0 ? ' active' : '');
+    btn.textContent = note;
+    btn.style.background = semis === 0 ? NOTE_COLORS[note] : '';
+    btn.dataset.semis = semis;
+    btn.addEventListener('click', function() {
+      songTranspose = semis === 0 ? 0 : (semis <= 6 ? semis : semis - 12);
+      document.querySelectorAll('.key-btn').forEach(function(b) {
+        b.classList.toggle('active', b === btn);
+        b.style.background = b === btn ? NOTE_COLORS[note] : '';
+      });
+    });
+    grp.appendChild(btn);
+  });
+  songTranspose = 0;
+}
+
+function stopSong() {
+  songPlaying = false;
+  songNoteTimers.forEach(function(t) { clearTimeout(t); });
+  songNoteTimers = [];
+  document.querySelectorAll('.note-circle.song-pulse')
+    .forEach(function(c) { c.classList.remove('song-pulse'); });
+  document.getElementById('song-play-btn').textContent = '▶ Play';
+  document.getElementById('song-play-btn').classList.remove('playing');
+}
+
+function playSong(key) {
+  stopSong();
+  var song = SONGS[key];
+  if (!song) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  songPlaying = true;
+  document.getElementById('song-play-btn').textContent = '⏹ Stop';
+  document.getElementById('song-play-btn').classList.add('playing');
+
+  var tempoMult = document.getElementById('tempo-slider').value / 100;
+  var bps       = (song.bpm * tempoMult) / 60;
+  var gate      = song.gate || 0.7;
+  var when0     = audioCtx.currentTime + 0.1;
+  var elapsed   = 0;
+
+  song.notes.forEach(function(note) {
+    var beatDur = note.dur / bps;
+    var noteDur = beatDur * gate;
+    var tWhen   = when0 + elapsed;
+
+    if (note.midi !== null) {
+      var tMidi = note.midi + songTranspose + songOctave;
+      scheduleSongNote(tMidi, tWhen, noteDur);
+
+      (function(tw, tm) {
+        var delay = Math.max(0, (tw - audioCtx.currentTime) * 1000);
+        var t = setTimeout(function() {
+          if (!songPlaying) return;
+          var noteName = CHROMATIC[((tm % 12) + 12) % 12];
+          crossPulsePatternByMidi(tm);
+          drawStaff(tm, noteName);
+        }, delay);
+        songNoteTimers.push(t);
+      })(tWhen, tMidi);
+    }
+
+    elapsed += beatDur;
+  });
+
+  var endTimer = setTimeout(function() { if (songPlaying) stopSong(); }, elapsed * 1000 + 300);
+  songNoteTimers.push(endTimer);
+}
+
+// Song player event listeners
+document.getElementById('song-select').addEventListener('change', function() {
+  stopSong();
+  var key = this.value;
+  buildKeyButtons(key ? SONGS[key] : null);
+  currentSongKey = key || null;
+});
+
+document.getElementById('song-play-btn').addEventListener('click', function() {
+  if (songPlaying) { stopSong(); return; }
+  var key = document.getElementById('song-select').value;
+  if (!key) return;
+  playSong(key);
+});
+
+document.getElementById('octave-btn').addEventListener('click', function() {
+  songOctaveOn = !songOctaveOn;
+  songOctave   = songOctaveOn ? 12 : 0;
+  this.classList.toggle('active', songOctaveOn);
+  this.textContent = songOctaveOn ? '🔼 +8va: On' : '🔼 +8va';
+});
+
+document.getElementById('tempo-slider').addEventListener('input', function() {
+  document.getElementById('tempo-display').textContent = this.value + '%';
+});
 
 // ── Metronome ─────────────────────────────────────────────────────────────────
 (function() {
-  const LOOKAHEAD   = 0.1;   // seconds to schedule ahead
-  const INTERVAL_MS = 25;    // scheduler polling interval
+  var running      = false;
+  var mAudioCtx    = null;
+  var beatIndex    = 0;
+  var nextBeatTime = 0;
+  var lookaheadId  = null;
+  var LOOKAHEAD    = 0.1;
+  var SCHEDULE_MS  = 25;
 
-  let metRunning  = false;
-  let metBeat     = 0;       // current beat (0-3)
-  let nextBeatAt  = 0;       // audioCtx time of next click
-  let metTimer    = null;
-  const beatEls   = [0,1,2,3].map(i => document.getElementById('mb' + i));
+  var btn     = document.getElementById('metro-btn');
+  var bpmIn   = document.getElementById('metro-bpm');
+  var bpmDisp = document.getElementById('metro-bpm-display');
+  var volIn   = document.getElementById('metro-vol');
+  var beats   = [0,1,2,3].map(function(i) { return document.getElementById('mb' + i); });
 
-  // BPM & volume controls
-  const bpmSlider  = document.getElementById('metro-bpm');
-  const bpmDisplay = document.getElementById('metro-bpm-display');
-  const volSlider  = document.getElementById('metro-vol');
-  const metBtn     = document.getElementById('metro-btn');
-
-  bpmSlider.addEventListener('input', () => {
-    bpmDisplay.textContent = bpmSlider.value + ' BPM';
-  });
-
-  function getBpm() { return +bpmSlider.value; }
-  function getVol() { return +volSlider.value / 100; }
+  bpmIn.addEventListener('input', function() { bpmDisp.textContent = bpmIn.value + ' BPM'; });
 
   function scheduleClick(time, isAccent) {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const vol  = getVol();
-    const freq = isAccent ? 1200 : 900;
-    const gain = isAccent ? vol : vol * 0.55;
+    var vol  = volIn.value / 100;
+    var comp = mAudioCtx.createDynamicsCompressor();
+    comp.threshold.value = -6; comp.ratio.value = 4;
+    comp.attack.value = 0.001; comp.release.value = 0.05;
+    comp.connect(mAudioCtx.destination);
 
-    const osc  = audioCtx.createOscillator();
-    const env  = audioCtx.createGain();
-    osc.connect(env);
-    env.connect(audioCtx.destination);
+    var buf  = mAudioCtx.createBuffer(1, Math.floor(mAudioCtx.sampleRate * 0.03), mAudioCtx.sampleRate);
+    var data = buf.getChannelData(0);
+    for (var i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (data.length * 0.12));
+    }
+    var noise = mAudioCtx.createBufferSource();
+    noise.buffer = buf;
+    var hp = mAudioCtx.createBiquadFilter();
+    hp.type = 'highpass'; hp.frequency.value = isAccent ? 600 : 900;
+    var noiseGain = mAudioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.001, time);
+    noiseGain.gain.exponentialRampToValueAtTime(isAccent ? vol * 9 : vol * 6, time + 0.003);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.028);
+    noise.connect(hp); hp.connect(noiseGain); noiseGain.connect(comp);
 
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    env.gain.setValueAtTime(gain, time);
-    env.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+    var osc     = mAudioCtx.createOscillator();
+    osc.type    = 'sine';
+    osc.frequency.value = isAccent ? 1200 : 900;
+    var oscGain = mAudioCtx.createGain();
+    oscGain.gain.setValueAtTime(0.001, time);
+    oscGain.gain.exponentialRampToValueAtTime(isAccent ? vol * 8 : vol * 5, time + 0.002);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.022);
+    osc.connect(oscGain); oscGain.connect(comp);
 
-    osc.start(time);
-    osc.stop(time + 0.045);
-  }
+    noise.start(time); noise.stop(time + 0.04);
+    osc.start(time);   osc.stop(time + 0.04);
 
-  function flashBeat(beat) {
-    beatEls.forEach((el, i) => el.classList.toggle('lit', i === beat));
-    setTimeout(() => { if (beatEls[beat]) beatEls[beat].classList.remove('lit'); }, 80);
+    var flashDelay = Math.max(0, (time - mAudioCtx.currentTime) * 1000);
+    var bi = beatIndex % 4;
+    setTimeout(function() {
+      beats.forEach(function(b, i) { b.classList.toggle('lit', i === bi); });
+    }, flashDelay);
   }
 
   function scheduler() {
-    if (!audioCtx) return;
-    while (nextBeatAt < audioCtx.currentTime + LOOKAHEAD) {
-      const isAccent = (metBeat === 0);
-      scheduleClick(nextBeatAt, isAccent);
-
-      // Visual flash — calculated ms from now
-      const delayMs = Math.max(0, (nextBeatAt - audioCtx.currentTime) * 1000);
-      const beat = metBeat;
-      setTimeout(() => flashBeat(beat), delayMs);
-
-      nextBeatAt += 60 / getBpm();
-      metBeat = (metBeat + 1) % 4;
+    var bpm     = parseFloat(bpmIn.value);
+    var beatLen = 60 / bpm;
+    var now     = mAudioCtx.currentTime;
+    while (nextBeatTime < now + LOOKAHEAD) {
+      scheduleClick(nextBeatTime, beatIndex % 4 === 0);
+      nextBeatTime += 60 / parseFloat(bpmIn.value);
+      beatIndex++;
     }
+    lookaheadId = setTimeout(scheduler, SCHEDULE_MS);
   }
 
-  function startMetronome() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    metRunning = true;
-    metBeat    = 0;
-    nextBeatAt = audioCtx.currentTime + 0.05;
-    metTimer   = setInterval(scheduler, INTERVAL_MS);
-    metBtn.textContent = '■ Stop';
-    metBtn.classList.add('active');
+  function startMetro() {
+    if (!mAudioCtx) mAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    mAudioCtx.resume().then(function() {
+      beatIndex    = 0;
+      nextBeatTime = mAudioCtx.currentTime;
+      scheduler();
+      running = true;
+      btn.textContent = '■ Stop';
+      btn.classList.add('active');
+    });
   }
 
-  function stopMetronome() {
-    metRunning = false;
-    clearInterval(metTimer);
-    beatEls.forEach(el => el.classList.remove('lit'));
-    metBtn.textContent = '▶ Start';
-    metBtn.classList.remove('active');
+  function stopMetro() {
+    clearTimeout(lookaheadId);
+    running = false;
+    beats.forEach(function(b) { b.classList.remove('lit'); });
+    btn.textContent = '▶ Start';
+    btn.classList.remove('active');
   }
 
-  metBtn.addEventListener('click', () => {
-    metRunning ? stopMetronome() : startMetronome();
+  btn.addEventListener('click', function() {
+    if (running) stopMetro(); else startMetro();
   });
 })();
+
 </script>
 </body>
 </html>
