@@ -754,7 +754,7 @@ function openBuilder() {
   Object.keys(CHORD_DB).sort().forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'pal-btn'; btn.textContent = name;
-    btn.onclick = () => addChord(name);
+    btn.onclick = () => { addChord(name); strumChord(name); };
     pal.appendChild(btn);
   });
   document.getElementById('builderModal').hidden = false;
